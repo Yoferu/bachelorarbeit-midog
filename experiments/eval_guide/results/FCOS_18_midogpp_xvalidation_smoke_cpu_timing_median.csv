@@ -1,0 +1,3 @@
+timing_file,run_name,dataset_csv,num_images,num_patches,device,batch_size,num_workers,overlap,nms_thresh,measured_inference_time_s,total_end_to_end_s,median_per_image_s,median_per_patch_s
+SUMMARY,median_measured_repeats,/home/johan/bachelorarbeit-midog/data/midogpp_guide_eval_xvalidation_smoke.csv,3,264,cpu,1,0,0.3,0.3,158.15610543300045,158.5308323979998,52.10044154900015,0.592050472147729
+experiments/eval_guide/results/FCOS_18_midogpp_xvalidation_smoke_cpu_timing.json,FCOS_18_eval,/home/johan/bachelorarbeit-midog/data/midogpp_guide_eval_xvalidation_smoke.csv,3,264,cpu,1,0,0.3,0.3,158.15610543300045,158.5308323979998,52.10044154900015,0.592050472147729

@@ -10,7 +10,8 @@ Large datasets and cloned upstream repositories are intentionally excluded from 
 
 ## Contents
 
-- `scripts/` - helper scripts for preparing MIDOG++ subsets, converting annotations, preparing FCOS configs, and collecting evaluation metrics.
+- `scripts/` - stable CLI entrypoints for preparing MIDOG++ subsets, benchmark runs, and result summaries.
+- `src/benchmark/` - tracked benchmark adapter and timing helpers. This is the project-owned boundary to the gitignored MIDOG guide clone.
 - `logs/` - local FCOS inference logs.
 - `results/raw_predictions/` - JSON detection outputs for the evaluated FCOS variants.
 - `experiments/eval_guide/` - evaluation configs, logs, and summarized metrics.
@@ -28,20 +29,7 @@ command and model can run. It is not a performance or accuracy claim.
 
 ```bash
 PROJECT="$HOME/bachelorarbeit-midog"
-EXP="$PROJECT/experiments/eval_guide"
-cd "$PROJECT/repos/MIDOG_2025_Guide"
-
-"$PROJECT/.venv/bin/python" evaluate.py \
-  --config_file "$EXP/configs/FCOS_18_eval.yaml" \
-  --dataset "$PROJECT/data/midogpp_guide_eval_xvalidation_smoke.csv" \
-  --img_dir "$PROJECT/data/midogpp" \
-  --split test \
-  --device cpu \
-  --batch_size 1 \
-  --num_workers 4 \
-  --overlap 0.3 \
-  --nms_thresh 0.3 \
-  --overwrite
+"$PROJECT/scripts/run_smoke_test.sh"
 ```
 
 ### 2. Quick Benchmark
@@ -95,35 +83,17 @@ runtime comparison value.
 ### 3. Full Benchmark
 
 The full benchmark remains the complete official MIDOG++ xvalidation test split
-evaluation and is the source for final runtime and accuracy reporting. The
-existing command style is unchanged:
+evaluation and is the source for final runtime and accuracy reporting.
 
 ```bash
 PROJECT="$HOME/bachelorarbeit-midog"
-EXP="$PROJECT/experiments/eval_guide"
-cd "$PROJECT/repos/MIDOG_2025_Guide"
-
-for MODEL in FCOS_18 FCOS_x50 FCOS_x101; do
-  /usr/bin/time -v "$PROJECT/.venv/bin/python" evaluate.py \
-    --config_file "$EXP/configs/${MODEL}_eval.yaml" \
-    --dataset "$PROJECT/data/midogpp_guide_eval_xvalidation.csv" \
-    --img_dir "$PROJECT/data/midogpp" \
-    --split test \
-    --device cpu \
-    --batch_size 1 \
-    --num_workers 4 \
-    --overlap 0.3 \
-    --nms_thresh 0.3 \
-    --overwrite \
-    2>&1 | tee "$EXP/logs/${MODEL}_midogpp_xvalidation_test_full_cpu.log"
-done
+"$PROJECT/scripts/run_full_benchmark.sh"
 ```
 
 ### Optional Timing Fields
 
-Pipeline timing is disabled by default. Passing `--profile_pipeline` to
-`repos/MIDOG_2025_Guide/evaluate.py` adds coarse `time.perf_counter()` timing
-for startup, image loading and patch setup, dataloader/preprocessing wait,
-forward pass, patch merging/postprocessing/NMS, metric calculation, and output
-serialization. JSON and CSV output paths can be controlled with
-`--timing_output_json` and `--timing_output_csv`.
+Pipeline timing is disabled by default. Passing `PROFILE_PIPELINE=1` to the
+benchmark scripts enables coarse `time.perf_counter()` timing through the
+tracked adapter in `src/benchmark/midog_guide_adapter.py`. The guide clone under
+`repos/` is treated as a read-only dependency; benchmark functionality does not
+depend on uncommitted changes inside that clone.

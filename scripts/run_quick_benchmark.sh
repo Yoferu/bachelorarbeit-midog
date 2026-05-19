@@ -5,6 +5,7 @@ PROJECT="${PROJECT:-$HOME/bachelorarbeit-midog}"
 EXP="${EXP:-$PROJECT/experiments/eval_guide}"
 GUIDE_REPO="${GUIDE_REPO:-$PROJECT/repos/MIDOG_2025_Guide}"
 PYTHON="${PYTHON:-$PROJECT/.venv/bin/python}"
+ADAPTER="${ADAPTER:-$PROJECT/src/benchmark/midog_guide_adapter.py}"
 QUICK_DATASET="${QUICK_DATASET:-$PROJECT/data/midogpp_guide_eval_xvalidation_quick.csv}"
 IMG_DIR="${IMG_DIR:-$PROJECT/data/midogpp}"
 DEVICE="${DEVICE:-cpu}"
@@ -24,8 +25,6 @@ fi
 
 mkdir -p "$EXP/logs" "$EXP/results"
 
-cd "$GUIDE_REPO"
-
 for MODEL in "${MODELS[@]}"; do
   CONFIG="$EXP/configs/${MODEL}_eval.yaml"
 
@@ -39,6 +38,7 @@ for MODEL in "${MODELS[@]}"; do
     for RUN in $(seq 1 "$RUN_COUNT"); do
       RUN_NAME="${MODEL}_midogpp_xvalidation_test_quick_${DEVICE}_${RUN_KIND}${RUN}"
       LOG_FILE="$EXP/logs/${RUN_NAME}.log"
+      METRICS_FILE="$EXP/results/${RUN_NAME}_metrics.json"
       TIMING_ARGS=()
 
       if [ "$PROFILE_PIPELINE" = "1" ]; then
@@ -49,10 +49,12 @@ for MODEL in "${MODELS[@]}"; do
         )
       fi
 
-      /usr/bin/time -v "$PYTHON" evaluate.py \
+      /usr/bin/time -v "$PYTHON" "$ADAPTER" \
         --config_file "$CONFIG" \
         --dataset "$QUICK_DATASET" \
+        --guide_repo "$GUIDE_REPO" \
         --img_dir "$IMG_DIR" \
+        --metrics_output "$METRICS_FILE" \
         --split test \
         --device "$DEVICE" \
         --batch_size "$BATCH_SIZE" \

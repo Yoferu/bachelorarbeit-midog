@@ -4,6 +4,14 @@ from pathlib import Path
 from typing import Any
 
 
+def write_runtime_metadata(metadata: dict[str, Any], path: Path | None) -> None:
+    if not path:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    print(f"Runtime metadata saved to: {path}")
+
+
 def write_timing_outputs(
     summary: dict[str, Any],
     json_path: Path | None,
@@ -20,6 +28,16 @@ def write_timing_outputs(
             "run_name": summary["run_name"],
             "config_file": summary["config_file"],
             "dataset_csv": summary["dataset_csv"],
+            "runtime_backend": summary.get("runtime_backend"),
+            "effective_runtime_backend": summary.get("effective_runtime_backend"),
+            "compile_backend": summary.get("compile_backend"),
+            "compile_mode": summary.get("compile_mode"),
+            "onnx_opset": summary.get("onnx_opset"),
+            "openvino_device": summary.get("openvino_device"),
+            "export_path": summary.get("export_path"),
+            "export_reused": summary.get("export_reused"),
+            "runtime_warnings": "; ".join(summary.get("runtime_warnings", [])),
+            "model_name": summary.get("model_name"),
             "num_images": summary["num_images"],
             "num_patches": summary["num_patches"],
             "device": summary["device"],

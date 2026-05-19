@@ -97,3 +97,31 @@ benchmark scripts enables coarse `time.perf_counter()` timing through the
 tracked adapter in `src/benchmark/midog_guide_adapter.py`. The guide clone under
 `repos/` is treated as a read-only dependency; benchmark functionality does not
 depend on uncommitted changes inside that clone.
+
+## Runtime and Deployment Optimization
+
+`pytorch_eager` is the default baseline. `pytorch_compile` is the first low-risk
+optimization path and can be enabled without changing benchmark commands:
+
+```bash
+RUNTIME_BACKEND=pytorch_compile PROFILE_PIPELINE=1 \
+  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
+```
+
+`onnxruntime_cpu` and `openvino_cpu` are deployment targets, but currently remain
+documented placeholders until ONNX/OpenVINO dependencies are installed and FCOS
+forward-pass export is validated. Planned generated artifacts belong under
+`experiments/eval_guide/exported_models/`, which is ignored by git.
+
+TorchScript is not prioritized for new deployment work because recent PyTorch
+versions favor `torch.export`/`torch.compile` flows.
+
+Example deployment-target commands:
+
+```bash
+RUNTIME_BACKEND=onnxruntime_cpu PROFILE_PIPELINE=1 \
+  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
+
+RUNTIME_BACKEND=openvino_cpu PROFILE_PIPELINE=1 \
+  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
+```

@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import pprint
 import sys
 import time
@@ -13,24 +14,39 @@ if __package__ in {None, ""}:
 
 from src.benchmark.benchmark_config import BenchmarkConfig
 from src.benchmark.pipeline_timing import build_timing_summary, instrument_guide_inference
-from src.benchmark.result_writer import write_timing_outputs
+from src.benchmark.result_writer import write_runtime_metadata, write_timing_outputs
+from src.benchmark.runtime_backends import RuntimeBackendUnavailable, configure_runtime_backend
+
+
+RUNTIME_BACKENDS = ("pytorch_eager", "pytorch_compile", "onnxruntime_cpu", "openvino_cpu")
 
 
 def get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Tracked adapter for MIDOG_2025_Guide evaluation.")
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--box_format", type=str, default="cxcy")
+    parser.add_argument("--compile_backend", type=str, default="inductor")
+    parser.add_argument("--compile_mode", type=str, default=None)
     parser.add_argument("--config_file", type=Path, required=True)
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--export_dir", type=Path, default=None)
     parser.add_argument("--guide_repo", type=Path, default=Path("repos/MIDOG_2025_Guide"))
     parser.add_argument("--img_dir", type=Path, required=True)
     parser.add_argument("--metrics_output", type=Path, default=None)
     parser.add_argument("--nms_thresh", type=float, default=0.3)
     parser.add_argument("--num_workers", type=int, default=8)
+    parser.add_argument("--onnx_opset", type=int, default=17)
+    parser.add_argument("--openvino_device", type=str, default="CPU")
     parser.add_argument("--overlap", type=float, default=0.3)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--profile_pipeline", action="store_true")
+    parser.add_argument(
+        "--runtime_backend",
+        choices=RUNTIME_BACKENDS,
+        default=os.environ.get("RUNTIME_BACKEND", "pytorch_eager"),
+    )
+    parser.add_argument("--runtime_metadata_output", type=Path, default=None)
     parser.add_argument("--split", type=str, default="test")
     parser.add_argument("--timing_output_csv", type=Path, default=None)
     parser.add_argument("--timing_output_json", type=Path, default=None)
@@ -57,6 +73,7 @@ def _load_guide_modules(guide_repo: Path, profile_pipeline: bool):
 def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> None:
     run_start = time.perf_counter()
     startup_times = {}
+    runtime_warning_prefix = "Runtime warning:"
 
     guide_inference, MIDOGEvaluation, ConfigCreator, ModelFactory = _load_guide_modules(
         config.guide_repo,
@@ -91,6 +108,25 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     model = ModelFactory.load(model_config, det_thresh=0.05)
     startup_times["model_loading"] = time.perf_counter() - stage_start
 
+    export_dir = config.export_dir or Path("experiments/eval_guide/exported_models")
+    stage_start = time.perf_counter()
+    try:
+        runtime_result = configure_runtime_backend(
+            model=model,
+            runtime_backend=config.runtime_backend,
+            compile_backend=config.compile_backend,
+            compile_mode=config.compile_mode,
+            onnx_opset=config.onnx_opset,
+            openvino_device=config.openvino_device,
+            export_dir=export_dir,
+            model_name=model_config.model_name,
+        )
+    except RuntimeBackendUnavailable as exc:
+        print(f"{runtime_warning_prefix} {exc}")
+        raise SystemExit(2) from exc
+    startup_times["runtime_backend_setup"] = time.perf_counter() - stage_start
+    model = runtime_result.model
+
     stage_start = time.perf_counter()
     processor, patch_config = guide_inference.setup_inference(
         model=model,
@@ -108,6 +144,11 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
 
     print("Loaded model configurations:")
     pprint.pprint(model_config)
+    print()
+    print(f"Runtime backend: {runtime_result.runtime_backend}")
+    print(f"Effective runtime backend: {runtime_result.effective_runtime_backend}")
+    for warning in runtime_result.runtime_warnings:
+        print(f"{runtime_warning_prefix} {warning}")
     print()
 
     test_dataset = dataset.query("split == @config.split")
@@ -160,6 +201,27 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     print(f"Evaluation results for {config.split} split")
     pprint.pprint(evaluation._metrics["aggregates"])
 
+    total_end_to_end_s = time.perf_counter() - run_start
+    runtime_metadata = {
+        **runtime_result.as_dict(),
+        "model_name": model_config.model_name,
+        "config_file": str(config.config_file),
+        "dataset_csv": str(config.dataset),
+        "device": config.device,
+        "batch_size": config.batch_size,
+        "num_workers": config.num_workers,
+        "overlap": config.overlap,
+        "nms_thresh": config.nms_thresh,
+        "total_runtime_s": total_end_to_end_s,
+        "pipeline_timing_enabled": config.profile_pipeline,
+    }
+    default_runtime_metadata = (
+        config.metrics_output.with_name(f"{config.metrics_output.stem}_runtime.json")
+        if config.metrics_output
+        else config.config_file.with_name(f"{config.config_file.stem}_runtime.json")
+    )
+    write_runtime_metadata(runtime_metadata, config.runtime_metadata_output or default_runtime_metadata)
+
     if config.profile_pipeline:
         default_json = config.config_file.with_name(f"{config.config_file.stem}_timing.json")
         default_csv = config.config_file.with_name(f"{config.config_file.stem}_timing.csv")
@@ -179,6 +241,7 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
             nms_thresh=config.nms_thresh,
             metrics_time=metrics_time,
             output_serialization_time=serialization_time,
+            runtime_metadata=runtime_metadata,
         )
         write_timing_outputs(
             summary,

@@ -35,11 +35,12 @@ def build_timing_summary(
     nms_thresh: float,
     metrics_time: float,
     output_serialization_time: float,
+    runtime_metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     measured_inference_time = sum(image_timings)
     num_patches = sum(patches_per_image)
 
-    return {
+    summary = {
         "run_name": config_file.stem,
         "config_file": str(config_file),
         "dataset_csv": str(dataset_csv),
@@ -74,6 +75,9 @@ def build_timing_summary(
             if patch_count
         ]),
     }
+    if runtime_metadata:
+        summary.update(runtime_metadata)
+    return summary
 
 
 def instrument_guide_inference(guide_inference: Any) -> None:

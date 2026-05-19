@@ -16,6 +16,12 @@ NMS_THRESH="${NMS_THRESH:-0.3}"
 WARMUP_RUNS="${WARMUP_RUNS:-1}"
 REPEATS="${REPEATS:-3}"
 PROFILE_PIPELINE="${PROFILE_PIPELINE:-0}"
+RUNTIME_BACKEND="${RUNTIME_BACKEND:-pytorch_eager}"
+COMPILE_BACKEND="${COMPILE_BACKEND:-inductor}"
+COMPILE_MODE="${COMPILE_MODE:-}"
+ONNX_OPSET="${ONNX_OPSET:-17}"
+OPENVINO_DEVICE="${OPENVINO_DEVICE:-CPU}"
+EXPORT_DIR="${EXPORT_DIR:-$EXP/exported_models}"
 
 if [ "$#" -gt 0 ]; then
   MODELS=("$@")
@@ -24,6 +30,11 @@ else
 fi
 
 mkdir -p "$EXP/logs" "$EXP/results"
+
+RUNTIME_LABEL="$DEVICE"
+if [ "$RUNTIME_BACKEND" != "pytorch_eager" ]; then
+  RUNTIME_LABEL="${DEVICE}_${RUNTIME_BACKEND}"
+fi
 
 for MODEL in "${MODELS[@]}"; do
   CONFIG="$EXP/configs/${MODEL}_eval.yaml"
@@ -36,10 +47,16 @@ for MODEL in "${MODELS[@]}"; do
     fi
 
     for RUN in $(seq 1 "$RUN_COUNT"); do
-      RUN_NAME="${MODEL}_midogpp_xvalidation_test_quick_${DEVICE}_${RUN_KIND}${RUN}"
+      RUN_NAME="${MODEL}_midogpp_xvalidation_test_quick_${RUNTIME_LABEL}_${RUN_KIND}${RUN}"
       LOG_FILE="$EXP/logs/${RUN_NAME}.log"
       METRICS_FILE="$EXP/results/${RUN_NAME}_metrics.json"
+      RUNTIME_METADATA_FILE="$EXP/results/${RUN_NAME}_runtime.json"
       TIMING_ARGS=()
+      COMPILE_ARGS=()
+
+      if [ -n "$COMPILE_MODE" ]; then
+        COMPILE_ARGS=(--compile_mode "$COMPILE_MODE")
+      fi
 
       if [ "$PROFILE_PIPELINE" = "1" ]; then
         TIMING_ARGS=(
@@ -55,6 +72,13 @@ for MODEL in "${MODELS[@]}"; do
         --guide_repo "$GUIDE_REPO" \
         --img_dir "$IMG_DIR" \
         --metrics_output "$METRICS_FILE" \
+        --runtime_metadata_output "$RUNTIME_METADATA_FILE" \
+        --runtime_backend "$RUNTIME_BACKEND" \
+        --compile_backend "$COMPILE_BACKEND" \
+        "${COMPILE_ARGS[@]}" \
+        --onnx_opset "$ONNX_OPSET" \
+        --openvino_device "$OPENVINO_DEVICE" \
+        --export_dir "$EXPORT_DIR" \
         --split test \
         --device "$DEVICE" \
         --batch_size "$BATCH_SIZE" \
@@ -69,7 +93,7 @@ for MODEL in "${MODELS[@]}"; do
 
   if [ "$PROFILE_PIPELINE" = "1" ]; then
     "$PYTHON" "$PROJECT/scripts/summarize_quick_benchmark_timing.py" \
-      --timing_glob "$EXP/results/${MODEL}_midogpp_xvalidation_test_quick_${DEVICE}_measured*_timing.json" \
-      --output_csv "$EXP/results/${MODEL}_midogpp_xvalidation_test_quick_${DEVICE}_timing_median.csv"
+      --timing_glob "$EXP/results/${MODEL}_midogpp_xvalidation_test_quick_${RUNTIME_LABEL}_measured*_timing.json" \
+      --output_csv "$EXP/results/${MODEL}_midogpp_xvalidation_test_quick_${RUNTIME_LABEL}_timing_median.csv"
   fi
 done

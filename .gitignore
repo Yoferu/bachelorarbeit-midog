@@ -1,0 +1,19 @@
+# Local execution environment
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local Codex/agent metadata
+.agents/
+.codex/
+
+# Datasets and external repositories
+data/
+repos/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp

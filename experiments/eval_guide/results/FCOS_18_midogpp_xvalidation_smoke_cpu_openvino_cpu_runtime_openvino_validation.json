@@ -1,0 +1,89 @@
+{
+  "available_devices": [
+    "CPU"
+  ],
+  "comparisons": {
+    "boxes": {
+      "onnx_dtype": "float32",
+      "onnx_shape": [
+        55,
+        4
+      ],
+      "openvino_dtype": "float32",
+      "openvino_shape": [
+        56,
+        4
+      ],
+      "pytorch_dtype": "float32",
+      "pytorch_shape": [
+        55,
+        4
+      ],
+      "shape_match": false
+    },
+    "labels": {
+      "onnx_dtype": "int64",
+      "onnx_shape": [
+        55
+      ],
+      "openvino_dtype": "int64",
+      "openvino_shape": [
+        56
+      ],
+      "pytorch_dtype": "int64",
+      "pytorch_shape": [
+        55
+      ],
+      "shape_match": false
+    },
+    "scores": {
+      "onnx_dtype": "float32",
+      "onnx_shape": [
+        55
+      ],
+      "openvino_dtype": "float32",
+      "openvino_shape": [
+        56
+      ],
+      "pytorch_dtype": "float32",
+      "pytorch_shape": [
+        55
+      ],
+      "shape_match": false
+    }
+  },
+  "limitations": [
+    "OpenVINO CPU uses the ONNX export as an intermediate representation. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "onnx_export_method": "reused",
+  "onnx_opset": 18,
+  "onnx_output_roles": {
+    "boxes": 0,
+    "labels": 2,
+    "scores": 1
+  },
+  "openvino_ir_reused": true,
+  "openvino_model_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_openvino.xml",
+  "openvino_output_roles": {
+    "boxes": 0,
+    "labels": 2,
+    "scores": 1
+  },
+  "openvino_version": "2026.1.0-21367-63e31528c62-releases/2026/1",
+  "openvino_weights_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_openvino.bin",
+  "runtime_backend": "openvino_cpu",
+  "selected_device": "CPU",
+  "source_onnx_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "source_onnx_reused": true,
+  "status": "passed_with_warnings",
+  "validation_warnings": [
+    "OpenVINO boxes count differs from PyTorch/ONNX on the validation patch: pytorch=[55, 4], onnx=[55, 4], openvino=[56, 4]. This can happen after exported FCOS filtering/NMS due to backend numeric differences.",
+    "OpenVINO scores count differs from PyTorch/ONNX on the validation patch: pytorch=[55], onnx=[55], openvino=[56]. This can happen after exported FCOS filtering/NMS due to backend numeric differences.",
+    "OpenVINO labels count differs from PyTorch/ONNX on the validation patch: pytorch=[55], onnx=[55], openvino=[56]. This can happen after exported FCOS filtering/NMS due to backend numeric differences."
+  ],
+  "warnings": [
+    "OpenVINO boxes count differs from PyTorch/ONNX on the validation patch: pytorch=[55, 4], onnx=[55, 4], openvino=[56, 4]. This can happen after exported FCOS filtering/NMS due to backend numeric differences.",
+    "OpenVINO scores count differs from PyTorch/ONNX on the validation patch: pytorch=[55], onnx=[55], openvino=[56]. This can happen after exported FCOS filtering/NMS due to backend numeric differences.",
+    "OpenVINO labels count differs from PyTorch/ONNX on the validation patch: pytorch=[55], onnx=[55], openvino=[56]. This can happen after exported FCOS filtering/NMS due to backend numeric differences."
+  ]
+}

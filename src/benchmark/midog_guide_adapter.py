@@ -36,7 +36,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--metrics_output", type=Path, default=None)
     parser.add_argument("--nms_thresh", type=float, default=0.3)
     parser.add_argument("--num_workers", type=int, default=8)
-    parser.add_argument("--onnx_opset", type=int, default=17)
+    parser.add_argument("--onnx_opset", type=int, default=18)
     parser.add_argument("--openvino_device", type=str, default="CPU")
     parser.add_argument("--overlap", type=float, default=0.3)
     parser.add_argument("--overwrite", action="store_true")
@@ -70,6 +70,23 @@ def _load_guide_modules(guide_repo: Path, profile_pipeline: bool):
     return guide_inference, MIDOGEvaluation, ConfigCreator, ModelFactory
 
 
+def _build_runtime_example_input(
+    *,
+    guide_inference,
+    image_path: Path,
+    patch_size: int,
+    overlap: float,
+    is_wsi: bool,
+):
+    dataset_class = guide_inference.WSI_InferenceDataset if is_wsi else guide_inference.ROI_InferenceDataset
+    patch_config = guide_inference.PatchConfig(size=patch_size, overlap=overlap)
+    dataset = dataset_class(image_path, patch_config=patch_config)
+    if len(dataset) == 0:
+        return None
+    patch, *_ = dataset[0]
+    return patch
+
+
 def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> None:
     run_start = time.perf_counter()
     startup_times = {}
@@ -100,6 +117,9 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         dataset = dataset.assign(ymax=dataset["y"] + radius)
     startup_times["dataset_box_conversion"] = time.perf_counter() - stage_start
 
+    test_dataset = dataset.query("split == @config.split")
+    filenames = test_dataset.filename.unique()
+
     stage_start = time.perf_counter()
     model_config = ConfigCreator.load(str(config.config_file))
     startup_times["config_loading"] = time.perf_counter() - stage_start
@@ -109,6 +129,33 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     startup_times["model_loading"] = time.perf_counter() - stage_start
 
     export_dir = config.export_dir or Path("experiments/eval_guide/exported_models")
+    default_runtime_metadata = (
+        config.metrics_output.with_name(f"{config.metrics_output.stem}_runtime.json")
+        if config.metrics_output
+        else config.config_file.with_name(f"{config.config_file.stem}_runtime.json")
+    )
+    runtime_metadata_output = config.runtime_metadata_output or default_runtime_metadata
+    validation_suffix = {
+        "onnxruntime_cpu": "onnx_validation",
+        "openvino_cpu": "openvino_validation",
+    }.get(config.runtime_backend)
+    validation_output = (
+        runtime_metadata_output.with_name(f"{runtime_metadata_output.stem}_{validation_suffix}.json")
+        if validation_suffix
+        else None
+    )
+    runtime_example_input = None
+    if config.runtime_backend in {"onnxruntime_cpu", "openvino_cpu"} and len(filenames) > 0:
+        stage_start = time.perf_counter()
+        runtime_example_input = _build_runtime_example_input(
+            guide_inference=guide_inference,
+            image_path=config.img_dir / filenames[0],
+            patch_size=model_config.patch_size,
+            overlap=config.overlap,
+            is_wsi=config.wsi,
+        )
+        startup_times["runtime_validation_input"] = time.perf_counter() - stage_start
+
     stage_start = time.perf_counter()
     try:
         runtime_result = configure_runtime_backend(
@@ -120,6 +167,10 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
             openvino_device=config.openvino_device,
             export_dir=export_dir,
             model_name=model_config.model_name,
+            patch_size=model_config.patch_size,
+            config_file=config.config_file,
+            validation_output=validation_output,
+            example_input=runtime_example_input,
         )
     except RuntimeBackendUnavailable as exc:
         print(f"{runtime_warning_prefix} {exc}")
@@ -150,9 +201,6 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     for warning in runtime_result.runtime_warnings:
         print(f"{runtime_warning_prefix} {warning}")
     print()
-
-    test_dataset = dataset.query("split == @config.split")
-    filenames = test_dataset.filename.unique()
 
     preds = {}
     image_timings = []
@@ -215,12 +263,7 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         "total_runtime_s": total_end_to_end_s,
         "pipeline_timing_enabled": config.profile_pipeline,
     }
-    default_runtime_metadata = (
-        config.metrics_output.with_name(f"{config.metrics_output.stem}_runtime.json")
-        if config.metrics_output
-        else config.config_file.with_name(f"{config.config_file.stem}_runtime.json")
-    )
-    write_runtime_metadata(runtime_metadata, config.runtime_metadata_output or default_runtime_metadata)
+    write_runtime_metadata(runtime_metadata, runtime_metadata_output)
 
     if config.profile_pipeline:
         default_json = config.config_file.with_name(f"{config.config_file.stem}_timing.json")

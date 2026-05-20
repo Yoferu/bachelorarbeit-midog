@@ -1,0 +1,31 @@
+{
+  "runtime_backend": "onnxruntime_cpu",
+  "effective_runtime_backend": "onnxruntime_cpu",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": 18,
+  "onnx_model_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "openvino_device": null,
+  "export_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "export_reused": true,
+  "execution_providers": [
+    "CPUExecutionProvider"
+  ],
+  "validation_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/results/FCOS_18_midogpp_xvalidation_test_quick_cpu_onnxruntime_cpu_measured1_runtime_onnx_validation.json",
+  "validation_status": "passed",
+  "onnx_export_method": "reused",
+  "runtime_limitations": [
+    "ONNX Runtime uses the exported torchvision FCOS inference graph on CPU. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "runtime_warnings": [],
+  "model_name": "FCOS_18",
+  "config_file": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "/home/johan/bachelorarbeit-midog/data/midogpp_guide_eval_xvalidation_quick.csv",
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 4,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_runtime_s": 1151.9528900180012,
+  "pipeline_timing_enabled": true
+}

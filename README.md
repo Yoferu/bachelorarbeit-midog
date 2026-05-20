@@ -19,6 +19,11 @@ Large datasets and cloned upstream repositories are intentionally excluded from 
 ## Python Dependencies
 
 The scripts use Python 3 and the packages listed in `requirements.txt`.
+Optional deployment runtime dependencies are recorded separately:
+
+```bash
+python -m pip install -r requirements-runtime.txt
+```
 
 ## Benchmark Levels
 
@@ -108,10 +113,24 @@ RUNTIME_BACKEND=pytorch_compile PROFILE_PIPELINE=1 \
   "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
 ```
 
-`onnxruntime_cpu` and `openvino_cpu` are deployment targets, but currently remain
-documented placeholders until ONNX/OpenVINO dependencies are installed and FCOS
-forward-pass export is validated. Planned generated artifacts belong under
-`experiments/eval_guide/exported_models/`, which is ignored by git.
+`onnxruntime_cpu` exports the torchvision FCOS inference graph to ONNX and runs
+patch inference with ONNX Runtime `CPUExecutionProvider`. Generated `.onnx`
+files are written to `experiments/eval_guide/exported_models/`, which is ignored
+by git. The exporter first tries the modern dynamo path and falls back to the
+legacy ONNX exporter when torchvision FCOS postprocessing/NMS blocks dynamo.
+Patch extraction, Python postprocessing/merging around patches, and metrics stay
+in the tracked adapter/evaluator flow.
+
+`openvino_cpu` uses the validated ONNX export as an intermediate format, converts
+it to OpenVINO IR, and runs patch inference on the OpenVINO CPU plugin. Generated
+`.xml` and `.bin` files are written next to the ONNX files under
+`experiments/eval_guide/exported_models/` and are not committed.
+
+OpenVINO can produce slightly different FCOS postprocessing/NMS results than
+PyTorch/ONNX Runtime because exported detection filtering is part of the model
+graph. The adapter records this as validation metadata and warnings; final
+runtime and accuracy comparisons should include all four backends on the same
+Full Benchmark before making claims.
 
 TorchScript is not prioritized for new deployment work because recent PyTorch
 versions favor `torch.export`/`torch.compile` flows.

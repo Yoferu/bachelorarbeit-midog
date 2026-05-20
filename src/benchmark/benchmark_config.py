@@ -17,7 +17,7 @@ class BenchmarkConfig:
     metrics_output: Path | None = None
     nms_thresh: float = 0.3
     num_workers: int = 8
-    onnx_opset: int = 17
+    onnx_opset: int = 18
     openvino_device: str = "CPU"
     overlap: float = 0.3
     overwrite: bool = False

@@ -52,6 +52,12 @@ Timed quick runs write per-run JSON/CSV summaries and a
 
 ## Runtime and Deployment Optimization
 
+Install optional deployment runtime dependencies with:
+
+```bash
+python -m pip install -r requirements-runtime.txt
+```
+
 `pytorch_eager` is the baseline runtime and remains the default for all benchmark
 scripts.
 
@@ -59,13 +65,40 @@ scripts.
 model with `torch.compile` when available. Configure it with `COMPILE_BACKEND`
 and `COMPILE_MODE`; the default backend is `inductor`.
 
-`onnxruntime_cpu` is the first real deployment runtime target. In the current
-repository state it is a documented placeholder: `onnx` and `onnxruntime` are
-not installed in the local environment, and the FCOS detection model needs a
-validated forward-pass export before ONNX Runtime results can be reported.
+`onnxruntime_cpu` is the first real deployment runtime target. It exports the
+torchvision FCOS inference graph to ONNX under
+`experiments/eval_guide/exported_models/` and runs patch inference with ONNX
+Runtime `CPUExecutionProvider`. Existing matching `.onnx` files are reused.
+Validation metadata is written next to the benchmark runtime JSON under
+`experiments/eval_guide/results/`.
 
-`openvino_cpu` is the CPU-focused deployment target. It is also a documented
-placeholder until a validated ONNX export exists and OpenVINO is installed.
+The ONNX exporter first tries `torch.onnx.export(..., dynamo=True)`. With the
+current PyTorch/torchvision FCOS stack, dynamo export can fail on
+postprocessing/NMS data-dependent shapes, so the backend falls back to the
+legacy exporter and records that warning in the result metadata. Patch
+extraction, surrounding Python postprocessing/merging, output serialization, and
+metrics remain in Python.
+
+`openvino_cpu` is the CPU-focused deployment target. It uses the existing ONNX
+export as the intermediate representation, converts that model with
+`openvino.convert_model`, saves OpenVINO IR with `openvino.save_model`, and runs
+patch inference through `openvino.Core().compile_model(..., "CPU")`.
+
+OpenVINO generated artifacts are stored under:
+
+```text
+experiments/eval_guide/exported_models/
+```
+
+The generated `.onnx`, `.xml`, and `.bin` files are ignored by git and should
+not be committed.
+
+OpenVINO validation compares PyTorch eager, ONNX Runtime CPU, and OpenVINO CPU
+on a real smoke patch. With the current exported FCOS graph, OpenVINO can differ
+slightly after exported filtering/NMS, so the adapter records
+`passed_with_warnings` when the output structure is valid but detection counts or
+numeric values differ. Treat OpenVINO as a real deployment backend, but use the
+Full Benchmark for final runtime and accuracy claims.
 
 TorchScript is not prioritized because recent PyTorch releases direct users
 toward `torch.export`/`torch.compile` flows rather than TorchScript for new
@@ -73,6 +106,9 @@ deployment work.
 
 Final runtime and accuracy claims must use the Full Benchmark. Use the Quick
 Benchmark for iteration and regression detection.
+Existing quick-run results for `pytorch_eager`, `pytorch_compile`, and
+`onnxruntime_cpu` remain valid as long as their benchmark code paths and inputs
+are not changed.
 
 Default smoke:
 
@@ -94,11 +130,27 @@ RUNTIME_BACKEND=onnxruntime_cpu PROFILE_PIPELINE=1 \
   "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
 ```
 
+Use `ONNX_OPSET` to override the default opset, currently 18:
+
+```bash
+ONNX_OPSET=18 RUNTIME_BACKEND=onnxruntime_cpu \
+  "$HOME/bachelorarbeit-midog/scripts/run_smoke_test.sh"
+```
+
 OpenVINO quick benchmark:
 
 ```bash
 RUNTIME_BACKEND=openvino_cpu PROFILE_PIPELINE=1 \
   "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
+```
+
+Final runtime comparisons should include:
+
+```text
+pytorch_eager
+pytorch_compile
+onnxruntime_cpu
+openvino_cpu
 ```
 
 Exported runtime artifacts belong under:

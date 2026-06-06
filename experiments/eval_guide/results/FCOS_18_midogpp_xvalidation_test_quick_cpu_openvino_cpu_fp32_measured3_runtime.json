@@ -1,0 +1,45 @@
+{
+  "runtime_backend": "openvino_cpu",
+  "effective_runtime_backend": "openvino_cpu",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": 18,
+  "onnx_model_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "openvino_device": "CPU",
+  "export_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.xml",
+  "export_reused": true,
+  "execution_providers": null,
+  "validation_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/results/FCOS_18_midogpp_xvalidation_test_quick_cpu_openvino_cpu_fp32_measured3_runtime_openvino_validation.json",
+  "validation_status": "passed_with_warnings",
+  "onnx_export_method": "reused",
+  "openvino_version": "2026.1.0-21367-63e31528c62-releases/2026/1",
+  "available_devices": [
+    "CPU"
+  ],
+  "selected_device": "CPU",
+  "source_onnx_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "source_onnx_reused": true,
+  "openvino_model_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.xml",
+  "openvino_weights_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.bin",
+  "openvino_ir_reused": true,
+  "openvino_compress_to_fp16": false,
+  "runtime_limitations": [
+    "OpenVINO CPU uses the ONNX export as an intermediate representation. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "runtime_warnings": [
+    "OpenVINO boxes is not numerically allclose to PyTorch on the validation patch (max_abs_diff=918.837646484375).",
+    "OpenVINO scores is not numerically allclose to PyTorch on the validation patch (max_abs_diff=0.002120763063430786)."
+  ],
+  "model_name": "FCOS_18",
+  "pruned_model_path": null,
+  "pruned_model_loaded": false,
+  "config_file": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "/home/johan/bachelorarbeit-midog/data/midogpp_guide_eval_xvalidation_quick.csv",
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 4,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_runtime_s": 564.4989275789994,
+  "pipeline_timing_enabled": true
+}

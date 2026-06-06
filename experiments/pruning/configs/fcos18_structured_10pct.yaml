@@ -1,0 +1,20 @@
+model: FCOS_18
+pruning_type: structured_channel_l2
+pruning_ratio: 0.10
+target_scope: detection_head_only
+pruning_mode: masked
+excluded_modules:
+  - backbone.body.conv1
+  - head.classification_head.cls_logits
+  - head.regression_head.bbox_reg
+  - head.regression_head.bbox_ctrness
+device: cpu
+seed: 42
+guide_repo: repos/MIDOG_2025_Guide
+eval_config: experiments/eval_guide/configs/FCOS_18_eval.yaml
+notes: >
+  First conservative FCOS_18 pruning milestone. This is a masked structured
+  channel-L2 baseline over internal same-width detection-head Conv2d layers.
+  It zeroes full output-channel filters but does not physically remove channels,
+  so large inference speedups are not expected.
+

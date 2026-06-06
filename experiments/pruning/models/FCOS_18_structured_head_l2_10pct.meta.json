@@ -1,0 +1,230 @@
+{
+  "artifact_path": "experiments/pruning/models/FCOS_18_structured_head_l2_10pct.pt",
+  "base_checkpoint": "/home/johan/bachelorarbeit-midog/repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt",
+  "base_eval_config": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "base_model": "FCOS_18",
+  "excluded_modules": [
+    {
+      "name": "backbone.body.conv1",
+      "reason": "first input convolution"
+    },
+    {
+      "name": "backbone.body.layer1.0.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer1.0.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer1.1.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer1.1.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer2.0.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer2.0.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer2.0.downsample.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer2.1.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer2.1.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer3.0.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer3.0.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer3.0.downsample.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer3.1.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer3.1.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer4.0.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer4.0.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer4.0.downsample.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer4.1.conv1",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.body.layer4.1.conv2",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.inner_blocks.0.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.inner_blocks.1.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.inner_blocks.2.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.inner_blocks.3.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.layer_blocks.0.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.layer_blocks.1.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.layer_blocks.2.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "backbone.fpn.layer_blocks.3.0",
+      "reason": "backbone/FPN channel changes require dependency-aware physical pruning"
+    },
+    {
+      "name": "head.classification_head.cls_logits",
+      "reason": "shape-sensitive FCOS output prediction layer"
+    },
+    {
+      "name": "head.regression_head.bbox_reg",
+      "reason": "shape-sensitive FCOS output prediction layer"
+    },
+    {
+      "name": "head.regression_head.bbox_ctrness",
+      "reason": "shape-sensitive FCOS output prediction layer"
+    }
+  ],
+  "git_commit": "2d882d71f443eb0422c90364340ab5ada7ce9a5d",
+  "module_results": [
+    {
+      "amount": 0.1,
+      "name": "head.classification_head.conv.0",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    },
+    {
+      "amount": 0.1,
+      "name": "head.classification_head.conv.3",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    },
+    {
+      "amount": 0.1,
+      "name": "head.classification_head.conv.6",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    },
+    {
+      "amount": 0.1,
+      "name": "head.classification_head.conv.9",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    },
+    {
+      "amount": 0.1,
+      "name": "head.regression_head.conv.0",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    },
+    {
+      "amount": 0.1,
+      "name": "head.regression_head.conv.3",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    },
+    {
+      "amount": 0.1,
+      "name": "head.regression_head.conv.6",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    },
+    {
+      "amount": 0.1,
+      "name": "head.regression_head.conv.9",
+      "newly_zeroed_channels": 26,
+      "out_channels": 256,
+      "pruning_method": "torch.nn.utils.prune.ln_structured",
+      "zeroed_channels_after": 26,
+      "zeroed_channels_before": 0
+    }
+  ],
+  "newly_zeroed_channels": 208,
+  "notes": "First conservative FCOS_18 pruning milestone. This is a masked structured channel-L2 baseline over internal same-width detection-head Conv2d layers. It zeroes full output-channel filters but does not physically remove channels, so large inference speedups are not expected.\n",
+  "parameters_after_nonzero": 18045255,
+  "parameters_after_total": 18524487,
+  "parameters_before_nonzero": 18524487,
+  "parameters_before_total": 18524487,
+  "physical_channel_removal": false,
+  "pruning_method": "structured_channel_l2",
+  "pruning_mode": "masked",
+  "pruning_ratio": 0.1,
+  "target_modules": [
+    "head.classification_head.conv.0",
+    "head.classification_head.conv.3",
+    "head.classification_head.conv.6",
+    "head.classification_head.conv.9",
+    "head.regression_head.conv.0",
+    "head.regression_head.conv.3",
+    "head.regression_head.conv.6",
+    "head.regression_head.conv.9"
+  ],
+  "target_scope": "detection_head_only",
+  "timestamp": "2026-05-31T20:49:44.117819+00:00",
+  "zeroed_channels": 208
+}

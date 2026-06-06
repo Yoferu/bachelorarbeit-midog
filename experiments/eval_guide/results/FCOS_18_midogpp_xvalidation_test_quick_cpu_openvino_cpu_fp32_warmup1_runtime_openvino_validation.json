@@ -1,0 +1,103 @@
+{
+  "available_devices": [
+    "CPU"
+  ],
+  "comparisons": {
+    "boxes": {
+      "onnx_dtype": "float32",
+      "onnx_openvino_allclose": false,
+      "onnx_openvino_max_abs_diff": 918.8375244140625,
+      "onnx_shape": [
+        50,
+        4
+      ],
+      "openvino_dtype": "float32",
+      "openvino_shape": [
+        50,
+        4
+      ],
+      "pytorch_dtype": "float32",
+      "pytorch_onnx_max_abs_diff": 0.0001220703125,
+      "pytorch_openvino_allclose": false,
+      "pytorch_openvino_max_abs_diff": 918.837646484375,
+      "pytorch_shape": [
+        50,
+        4
+      ],
+      "shape_match": true
+    },
+    "labels": {
+      "onnx_dtype": "int64",
+      "onnx_openvino_allclose": true,
+      "onnx_openvino_max_abs_diff": 0.0,
+      "onnx_shape": [
+        50
+      ],
+      "openvino_dtype": "int64",
+      "openvino_shape": [
+        50
+      ],
+      "pytorch_dtype": "int64",
+      "pytorch_onnx_max_abs_diff": 0.0,
+      "pytorch_openvino_allclose": true,
+      "pytorch_openvino_max_abs_diff": 0.0,
+      "pytorch_shape": [
+        50
+      ],
+      "shape_match": true
+    },
+    "scores": {
+      "onnx_dtype": "float32",
+      "onnx_openvino_allclose": false,
+      "onnx_openvino_max_abs_diff": 0.002120479941368103,
+      "onnx_shape": [
+        50
+      ],
+      "openvino_dtype": "float32",
+      "openvino_shape": [
+        50
+      ],
+      "pytorch_dtype": "float32",
+      "pytorch_onnx_max_abs_diff": 7.897615432739258e-07,
+      "pytorch_openvino_allclose": false,
+      "pytorch_openvino_max_abs_diff": 0.002120763063430786,
+      "pytorch_shape": [
+        50
+      ],
+      "shape_match": true
+    }
+  },
+  "limitations": [
+    "OpenVINO CPU uses the ONNX export as an intermediate representation. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "onnx_export_method": "reused",
+  "onnx_opset": 18,
+  "onnx_output_roles": {
+    "boxes": 0,
+    "labels": 2,
+    "scores": 1
+  },
+  "openvino_compress_to_fp16": false,
+  "openvino_ir_reused": true,
+  "openvino_model_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.xml",
+  "openvino_output_roles": {
+    "boxes": 0,
+    "labels": 2,
+    "scores": 1
+  },
+  "openvino_version": "2026.1.0-21367-63e31528c62-releases/2026/1",
+  "openvino_weights_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.bin",
+  "runtime_backend": "openvino_cpu",
+  "selected_device": "CPU",
+  "source_onnx_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "source_onnx_reused": true,
+  "status": "passed_with_warnings",
+  "validation_warnings": [
+    "OpenVINO boxes is not numerically allclose to PyTorch on the validation patch (max_abs_diff=918.837646484375).",
+    "OpenVINO scores is not numerically allclose to PyTorch on the validation patch (max_abs_diff=0.002120763063430786)."
+  ],
+  "warnings": [
+    "OpenVINO boxes is not numerically allclose to PyTorch on the validation patch (max_abs_diff=918.837646484375).",
+    "OpenVINO scores is not numerically allclose to PyTorch on the validation patch (max_abs_diff=0.002120763063430786)."
+  ]
+}

@@ -1,0 +1,37 @@
+model: FCOS_18
+base_eval_config: experiments/eval_guide/configs/FCOS_18_eval.yaml
+pruned_model_path: experiments/pruning/models/FCOS_18_structured_head_l2_10pct.pt
+dataset: data/midogpp_guide_eval_xvalidation.csv
+img_dir: data/midogpp
+output_model_path: experiments/pruning/models/FCOS_18_structured_head_l2_10pct_finetuned_recovery.pt
+run_name: fcos18_structured_head_l2_10pct_finetune_recovery
+guide_repo: repos/MIDOG_2025_Guide
+results_dir: experiments/pruning/results
+logs_dir: experiments/pruning/logs
+device: auto
+accelerator: auto
+devices: 1
+seed: 42
+deterministic: false
+cudnn_benchmark: false
+learning_rate: 0.00001
+optimizer: AdamW
+scheduler: null
+max_epochs: 1
+max_steps: 50
+batch_size: 1
+num_workers: 0
+num_train_samples: 64
+num_val_samples: 0
+fg_prob: 0.75
+arb_prob: 0.0
+box_format: cxcy
+domain_col: tumortype
+limit_val_batches: 0.0
+gradient_clip_val: 1.0
+preserve_zeroed_pruning_masks: true
+notes:
+  - "Longer recovery run for FCOS_18 masked structured pruning."
+  - "Uses device=auto, resolving to CUDA when available."
+  - "Zeroed channel filters are kept zero after each optimizer step."
+  - "This run is not a final accuracy claim."

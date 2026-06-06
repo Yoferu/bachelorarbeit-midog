@@ -83,6 +83,12 @@ metrics remain in Python.
 export as the intermediate representation, converts that model with
 `openvino.convert_model`, saves OpenVINO IR with `openvino.save_model`, and runs
 patch inference through `openvino.Core().compile_model(..., "CPU")`.
+By default the adapter keeps OpenVINO's default IR save behavior, including FP16
+weight compression. Set `OPENVINO_COMPRESS_TO_FP16=0` or pass
+`--openvino_compress_to_fp16 0` to save a separate FP32 IR with
+`openvino.save_model(..., compress_to_fp16=False)` for accuracy validation.
+The FP32 IR filename includes `_fp32`, and runtime, validation, and timing
+metadata record `openvino_compress_to_fp16`.
 
 OpenVINO generated artifacts are stored under:
 
@@ -109,6 +115,37 @@ Benchmark for iteration and regression detection.
 Existing quick-run results for `pytorch_eager`, `pytorch_compile`, and
 `onnxruntime_cpu` remain valid as long as their benchmark code paths and inputs
 are not changed.
+
+## Pruned Model Evaluation
+
+Pruning is evaluated separately from runtime/deployment optimization at first.
+The current `FCOS_18` pruning artifact is a masked structured pruning baseline:
+it zeros full detection-head output-channel filters but does not physically
+remove channels from the graph. Treat it as a feasibility and accuracy check,
+not as evidence of real compute reduction.
+
+Load a pruned artifact with `PRUNED_MODEL_PATH`:
+
+```bash
+NUM_WORKERS=0 \
+PRUNED_MODEL_PATH="$HOME/bachelorarbeit-midog/experiments/pruning/models/FCOS_18_structured_head_l2_10pct.pt" \
+RUNTIME_BACKEND=pytorch_eager \
+"$HOME/bachelorarbeit-midog/scripts/run_smoke_test.sh" FCOS_18
+```
+
+For quick timing:
+
+```bash
+NUM_WORKERS=0 \
+PRUNED_MODEL_PATH="$HOME/bachelorarbeit-midog/experiments/pruning/models/FCOS_18_structured_head_l2_10pct.pt" \
+RUNTIME_BACKEND=pytorch_eager \
+PROFILE_PIPELINE=1 \
+"$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
+```
+
+The benchmark scripts append the pruned artifact stem to run names, so baseline
+runtime benchmark outputs are not overwritten. See `docs/pruning.md` for the
+structured pruning workflow and limitations.
 
 Default smoke:
 

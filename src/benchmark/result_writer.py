@@ -42,6 +42,7 @@ def write_timing_outputs(
             "openvino_model_path": summary.get("openvino_model_path"),
             "openvino_weights_path": summary.get("openvino_weights_path"),
             "openvino_ir_reused": summary.get("openvino_ir_reused"),
+            "openvino_compress_to_fp16": summary.get("openvino_compress_to_fp16"),
             "export_path": summary.get("export_path"),
             "export_reused": summary.get("export_reused"),
             "runtime_warnings": "; ".join(summary.get("runtime_warnings", [])),

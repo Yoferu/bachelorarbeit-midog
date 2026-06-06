@@ -41,6 +41,7 @@ class RuntimeBackendResult:
     openvino_model_path: Path | None = None
     openvino_weights_path: Path | None = None
     openvino_ir_reused: bool | None = None
+    openvino_compress_to_fp16: bool | None = None
     runtime_limitations: list[str] = field(default_factory=list)
     runtime_warnings: list[str] = field(default_factory=list)
 
@@ -67,6 +68,7 @@ class RuntimeBackendResult:
             "openvino_model_path": str(self.openvino_model_path) if self.openvino_model_path else None,
             "openvino_weights_path": str(self.openvino_weights_path) if self.openvino_weights_path else None,
             "openvino_ir_reused": self.openvino_ir_reused,
+            "openvino_compress_to_fp16": self.openvino_compress_to_fp16,
             "runtime_limitations": self.runtime_limitations,
             "runtime_warnings": self.runtime_warnings,
         }
@@ -90,6 +92,7 @@ def configure_runtime_backend(
     config_file: Path | None = None,
     validation_output: Path | None = None,
     example_input: Any | None = None,
+    openvino_compress_to_fp16: bool = True,
 ) -> RuntimeBackendResult:
     if runtime_backend == "pytorch_eager":
         return RuntimeBackendResult(
@@ -128,6 +131,7 @@ def configure_runtime_backend(
             patch_size=patch_size,
             onnx_opset=onnx_opset,
             openvino_device=openvino_device,
+            openvino_compress_to_fp16=openvino_compress_to_fp16,
             config_file=config_file,
             validation_output=validation_output,
             example_input=example_input,
@@ -325,6 +329,7 @@ def _configure_openvino_cpu(
     patch_size: int,
     onnx_opset: int,
     openvino_device: str,
+    openvino_compress_to_fp16: bool,
     config_file: Path | None,
     validation_output: Path | None,
     example_input: Any | None,
@@ -369,7 +374,8 @@ def _configure_openvino_cpu(
     )
     warnings.extend(onnx_warnings)
 
-    xml_path = onnx_path.with_name(f"{onnx_path.stem}_openvino.xml")
+    precision_suffix = "" if openvino_compress_to_fp16 else "_fp32"
+    xml_path = onnx_path.with_name(f"{onnx_path.stem}_openvino{precision_suffix}.xml")
     bin_path = xml_path.with_suffix(".bin")
     ir_reused = (
         xml_path.exists()
@@ -394,7 +400,8 @@ def _configure_openvino_cpu(
             ov_model = core.read_model(str(xml_path))
         else:
             ov_model = ov.convert_model(str(onnx_path))
-            ov.save_model(ov_model, str(xml_path))
+            save_kwargs = {} if openvino_compress_to_fp16 else {"compress_to_fp16": False}
+            ov.save_model(ov_model, str(xml_path), **save_kwargs)
     except Exception as exc:
         raise RuntimeBackendUnavailable(
             f"OpenVINO ONNX-to-IR conversion/loading failed for {onnx_path}: {exc}"
@@ -431,6 +438,7 @@ def _configure_openvino_cpu(
         openvino_version=str(getattr(ov, "__version__", "unknown")),
         available_devices=available_devices,
         selected_device=openvino_device,
+        openvino_compress_to_fp16=openvino_compress_to_fp16,
         warnings=warnings,
         limitations=limitations,
     )
@@ -470,6 +478,7 @@ def _configure_openvino_cpu(
         openvino_model_path=xml_path,
         openvino_weights_path=bin_path,
         openvino_ir_reused=ir_reused,
+        openvino_compress_to_fp16=openvino_compress_to_fp16,
         runtime_limitations=limitations,
         runtime_warnings=warnings,
     )
@@ -720,6 +729,7 @@ def _validate_openvino_detection_model(
     openvino_version: str,
     available_devices: list[str],
     selected_device: str,
+    openvino_compress_to_fp16: bool,
     warnings: list[str],
     limitations: list[str],
 ) -> dict[str, Any]:
@@ -803,6 +813,7 @@ def _validate_openvino_detection_model(
         "openvino_version": openvino_version,
         "available_devices": available_devices,
         "selected_device": selected_device,
+        "openvino_compress_to_fp16": openvino_compress_to_fp16,
         "source_onnx_path": str(source_onnx_path),
         "openvino_model_path": str(openvino_model_path),
         "openvino_weights_path": str(openvino_weights_path),

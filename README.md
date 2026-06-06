@@ -12,6 +12,7 @@ Large datasets and cloned upstream repositories are intentionally excluded from 
 
 - `scripts/` - stable CLI entrypoints for preparing MIDOG++ subsets, benchmark runs, and result summaries.
 - `src/benchmark/` - tracked benchmark adapter and timing helpers. This is the project-owned boundary to the gitignored MIDOG guide clone.
+- `src/pruning/` - tracked pruning utilities for project-owned structured pruning experiments.
 - `logs/` - local FCOS inference logs.
 - `results/raw_predictions/` - JSON detection outputs for the evaluated FCOS variants.
 - `experiments/eval_guide/` - evaluation configs, logs, and summarized metrics.
@@ -125,6 +126,12 @@ in the tracked adapter/evaluator flow.
 it to OpenVINO IR, and runs patch inference on the OpenVINO CPU plugin. Generated
 `.xml` and `.bin` files are written next to the ONNX files under
 `experiments/eval_guide/exported_models/` and are not committed.
+The default OpenVINO IR keeps `openvino.save_model` defaults, including FP16
+weight compression. For a controlled FP32 comparison, run with
+`OPENVINO_COMPRESS_TO_FP16=0`; this calls
+`openvino.save_model(..., compress_to_fp16=False)`, writes a distinct `_fp32`
+IR, and records `openvino_compress_to_fp16` in runtime, validation, and timing
+metadata.
 
 OpenVINO can produce slightly different FCOS postprocessing/NMS results than
 PyTorch/ONNX Runtime because exported detection filtering is part of the model
@@ -143,4 +150,20 @@ RUNTIME_BACKEND=onnxruntime_cpu PROFILE_PIPELINE=1 \
 
 RUNTIME_BACKEND=openvino_cpu PROFILE_PIPELINE=1 \
   "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
+
+OPENVINO_COMPRESS_TO_FP16=0 RUNTIME_BACKEND=openvino_cpu PROFILE_PIPELINE=1 \
+  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
 ```
+
+## Structured Pruning
+
+The first pruning milestone is a conservative `FCOS_18` 10% masked structured
+channel-L2 baseline on internal detection-head convolutions. It produces a
+loadable PyTorch artifact and metadata under `experiments/pruning/models/`.
+Because this baseline zeros channels without physically removing them, it is
+mainly for feasibility and accuracy validation; large CPU speedups require a
+future dependency-aware physical pruning pass.
+
+See `docs/pruning.md` for inspection, artifact creation, smoke test, and quick
+benchmark commands. Use `PRUNED_MODEL_PATH=...` to evaluate the pruned artifact
+without changing baseline configs or weights.

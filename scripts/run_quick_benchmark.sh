@@ -16,11 +16,13 @@ NMS_THRESH="${NMS_THRESH:-0.3}"
 WARMUP_RUNS="${WARMUP_RUNS:-1}"
 REPEATS="${REPEATS:-3}"
 PROFILE_PIPELINE="${PROFILE_PIPELINE:-0}"
+PRUNED_MODEL_PATH="${PRUNED_MODEL_PATH:-}"
 RUNTIME_BACKEND="${RUNTIME_BACKEND:-pytorch_eager}"
 COMPILE_BACKEND="${COMPILE_BACKEND:-inductor}"
 COMPILE_MODE="${COMPILE_MODE:-}"
 ONNX_OPSET="${ONNX_OPSET:-18}"
 OPENVINO_DEVICE="${OPENVINO_DEVICE:-CPU}"
+OPENVINO_COMPRESS_TO_FP16="${OPENVINO_COMPRESS_TO_FP16:-1}"
 EXPORT_DIR="${EXPORT_DIR:-$EXP/exported_models}"
 
 if [ "$#" -gt 0 ]; then
@@ -34,6 +36,16 @@ mkdir -p "$EXP/logs" "$EXP/results"
 RUNTIME_LABEL="$DEVICE"
 if [ "$RUNTIME_BACKEND" != "pytorch_eager" ]; then
   RUNTIME_LABEL="${DEVICE}_${RUNTIME_BACKEND}"
+fi
+if [ "$RUNTIME_BACKEND" = "openvino_cpu" ] && [ "$OPENVINO_COMPRESS_TO_FP16" = "0" ]; then
+  RUNTIME_LABEL="${RUNTIME_LABEL}_fp32"
+fi
+PRUNED_ARGS=()
+if [ -n "$PRUNED_MODEL_PATH" ]; then
+  PRUNED_STEM="$(basename "$PRUNED_MODEL_PATH")"
+  PRUNED_STEM="${PRUNED_STEM%.*}"
+  RUNTIME_LABEL="${RUNTIME_LABEL}_pruned_${PRUNED_STEM}"
+  PRUNED_ARGS=(--pruned_model_path "$PRUNED_MODEL_PATH")
 fi
 
 for MODEL in "${MODELS[@]}"; do
@@ -74,10 +86,12 @@ for MODEL in "${MODELS[@]}"; do
         --metrics_output "$METRICS_FILE" \
         --runtime_metadata_output "$RUNTIME_METADATA_FILE" \
         --runtime_backend "$RUNTIME_BACKEND" \
+        "${PRUNED_ARGS[@]}" \
         --compile_backend "$COMPILE_BACKEND" \
         "${COMPILE_ARGS[@]}" \
         --onnx_opset "$ONNX_OPSET" \
         --openvino_device "$OPENVINO_DEVICE" \
+        --openvino_compress_to_fp16 "$OPENVINO_COMPRESS_TO_FP16" \
         --export_dir "$EXPORT_DIR" \
         --split test \
         --device "$DEVICE" \

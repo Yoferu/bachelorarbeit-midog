@@ -1,0 +1,83 @@
+{
+  "base_model": "FCOS_18",
+  "base_checkpoint": "/home/johan/bachelorarbeit-midog/repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt",
+  "base_eval_config": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "pruned_checkpoint": "experiments/pruning/models/FCOS_18_structured_head_l2_10pct.pt",
+  "fine_tuned_checkpoint": "experiments/pruning/models/FCOS_18_structured_head_l2_10pct_finetuned_auto_smoke.pt",
+  "training_dataset": "data/midogpp_guide_eval_xvalidation.csv",
+  "training_split": "train",
+  "learning_rate": 1e-05,
+  "max_epochs": 1,
+  "max_steps": 2,
+  "seed": 42,
+  "deterministic": false,
+  "cudnn_benchmark": false,
+  "torch_deterministic_algorithms": false,
+  "optimizer": "AdamW",
+  "scheduler": null,
+  "requested_device": "auto",
+  "resolved_device": "cpu",
+  "device": "cpu",
+  "requested_accelerator": "auto",
+  "accelerator": "cpu",
+  "devices": 1,
+  "torch_version": "2.11.0+cu130",
+  "torch_cuda_version": "13.0",
+  "cuda_available": false,
+  "cuda_device_count": 0,
+  "cuda_device_name": null,
+  "batch_size": 1,
+  "num_workers": 0,
+  "num_train_samples": 4,
+  "num_val_samples": 1,
+  "preserve_zeroed_pruning_masks": true,
+  "zeroed_channels": 208,
+  "parameters_total": 18524487,
+  "parameters_nonzero": 18045255,
+  "train_started_at": "2026-05-31T21:57:36.738590+00:00",
+  "train_finished_at": "2026-05-31T21:57:41.335427+00:00",
+  "timestamp": "2026-05-31T21:57:41.383252+00:00",
+  "git_commit": "2d882d71f443eb0422c90364340ab5ada7ce9a5d",
+  "log_path": "experiments/pruning/logs/fcos18_structured_head_l2_10pct_finetune_auto_smoke_20260531T215734Z.log",
+  "lightning_log_dir": "experiments/pruning/results/fcos18_structured_head_l2_10pct_finetune_auto_smoke/20260531T215734Z",
+  "notes": [
+    "Tiny recovery smoke run for FCOS_18 masked structured pruning.",
+    "Zeroed channel filters are kept zero after each optimizer step.",
+    "This run is not a final accuracy claim."
+  ],
+  "final_smoke_metrics": {
+    "metrics_path": "experiments/eval_guide/results/FCOS_18_midogpp_xvalidation_smoke_cpu_pruned_FCOS_18_structured_head_l2_10pct_finetuned_auto_smoke_metrics.json",
+    "runtime_path": "experiments/eval_guide/results/FCOS_18_midogpp_xvalidation_smoke_cpu_pruned_FCOS_18_structured_head_l2_10pct_finetuned_auto_smoke_runtime.json",
+    "aggregates": {
+      "precision": 0.9999999999998571,
+      "recall": 0.19444444444443904,
+      "f1_score": 0.3255813953488296,
+      "AP": 0.8023895621299744,
+      "tumor_humanbreastcancer_precision": 0.9999999999998571,
+      "tumor_humanbreastcancer_recall": 0.19444444444443904,
+      "tumor_humanbreastcancer_f1": 0.3255813953488296,
+      "tumor_humanbreastcancer_AP": 0.8023895621299744
+    },
+    "case": {
+      "006.tiff": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 3
+      },
+      "007.tiff": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 19
+      },
+      "014.tiff": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 7
+      }
+    },
+    "runtime_backend": "pytorch_eager",
+    "num_workers": 0,
+    "pruned_model_loaded": true
+  },
+  "results_metadata_path": "experiments/pruning/results/FCOS_18_structured_head_l2_10pct_finetuned_auto_smoke.meta.json"
+}

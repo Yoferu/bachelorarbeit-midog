@@ -19,9 +19,11 @@ class BenchmarkConfig:
     num_workers: int = 8
     onnx_opset: int = 18
     openvino_device: str = "CPU"
+    openvino_compress_to_fp16: bool = True
     overlap: float = 0.3
     overwrite: bool = False
     profile_pipeline: bool = False
+    pruned_model_path: Path | None = None
     runtime_backend: str = "pytorch_eager"
     runtime_metadata_output: Path | None = None
     split: str = "test"

@@ -1,0 +1,72 @@
+{
+  "base_model": "FCOS_18",
+  "base_checkpoint": "/home/johan/bachelorarbeit-midog/repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt",
+  "base_eval_config": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "pruned_checkpoint": "experiments/pruning/models/FCOS_18_structured_head_l2_10pct.pt",
+  "fine_tuned_checkpoint": "experiments/pruning/models/FCOS_18_structured_head_l2_10pct_finetuned_smoke.pt",
+  "training_dataset": "data/midogpp_guide_eval_xvalidation.csv",
+  "training_split": "train",
+  "learning_rate": 1e-05,
+  "max_epochs": 1,
+  "max_steps": 2,
+  "seed": 42,
+  "optimizer": "AdamW",
+  "scheduler": null,
+  "device": "cpu",
+  "accelerator": "cpu",
+  "devices": 1,
+  "batch_size": 1,
+  "num_workers": 0,
+  "num_train_samples": 4,
+  "num_val_samples": 1,
+  "preserve_zeroed_pruning_masks": true,
+  "zeroed_channels": 208,
+  "parameters_total": 18524487,
+  "parameters_nonzero": 18045255,
+  "train_started_at": "2026-05-31T21:31:29.109874+00:00",
+  "train_finished_at": "2026-05-31T21:31:33.385610+00:00",
+  "timestamp": "2026-05-31T21:31:33.424971+00:00",
+  "git_commit": "2d882d71f443eb0422c90364340ab5ada7ce9a5d",
+  "log_path": "experiments/pruning/logs/fcos18_structured_head_l2_10pct_finetune_smoke_20260531T213127Z.log",
+  "lightning_log_dir": "experiments/pruning/results/fcos18_structured_head_l2_10pct_finetune_smoke/20260531T213127Z",
+  "notes": [
+    "Tiny recovery smoke run for FCOS_18 masked structured pruning.",
+    "Zeroed channel filters are kept zero after each optimizer step.",
+    "This run is not a final accuracy claim."
+  ],
+  "final_smoke_metrics": {
+    "metrics_path": "experiments/eval_guide/results/FCOS_18_midogpp_xvalidation_smoke_cpu_pruned_FCOS_18_structured_head_l2_10pct_finetuned_smoke_metrics.json",
+    "runtime_path": "experiments/eval_guide/results/FCOS_18_midogpp_xvalidation_smoke_cpu_pruned_FCOS_18_structured_head_l2_10pct_finetuned_smoke_runtime.json",
+    "aggregates": {
+      "precision": 0.999999999999875,
+      "recall": 0.22222222222221605,
+      "f1_score": 0.3636363636363554,
+      "AP": 0.8014872670173645,
+      "tumor_humanbreastcancer_precision": 0.999999999999875,
+      "tumor_humanbreastcancer_recall": 0.22222222222221605,
+      "tumor_humanbreastcancer_f1": 0.3636363636363554,
+      "tumor_humanbreastcancer_AP": 0.8014872670173645
+    },
+    "case": {
+      "006.tiff": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 3
+      },
+      "007.tiff": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 19
+      },
+      "014.tiff": {
+        "tp": 2,
+        "fp": 0,
+        "fn": 6
+      }
+    },
+    "runtime_backend": "pytorch_eager",
+    "num_workers": 0,
+    "pruned_model_loaded": true
+  },
+  "results_metadata_path": "experiments/pruning/results/FCOS_18_structured_head_l2_10pct_finetuned_smoke.meta.json"
+}

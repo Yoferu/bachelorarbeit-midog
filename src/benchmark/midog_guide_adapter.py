@@ -16,9 +16,21 @@ from src.benchmark.benchmark_config import BenchmarkConfig
 from src.benchmark.pipeline_timing import build_timing_summary, instrument_guide_inference
 from src.benchmark.result_writer import write_runtime_metadata, write_timing_outputs
 from src.benchmark.runtime_backends import RuntimeBackendUnavailable, configure_runtime_backend
+from src.pruning.save_pruned_model import load_pruned_state_dict
 
 
 RUNTIME_BACKENDS = ("pytorch_eager", "pytorch_compile", "onnxruntime_cpu", "openvino_cpu")
+
+
+def _parse_bool_flag(value: str | bool) -> bool:
+    if isinstance(value, bool):
+        return value
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise argparse.ArgumentTypeError("expected one of: 1/0, true/false, yes/no, on/off")
 
 
 def get_args() -> argparse.Namespace:
@@ -38,9 +50,16 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--onnx_opset", type=int, default=18)
     parser.add_argument("--openvino_device", type=str, default="CPU")
+    parser.add_argument(
+        "--openvino_compress_to_fp16",
+        type=_parse_bool_flag,
+        default=_parse_bool_flag(os.environ.get("OPENVINO_COMPRESS_TO_FP16", "1")),
+        help="Use OpenVINO save_model FP16 weight compression for IR export (1/0).",
+    )
     parser.add_argument("--overlap", type=float, default=0.3)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--profile_pipeline", action="store_true")
+    parser.add_argument("--pruned_model_path", type=Path, default=os.environ.get("PRUNED_MODEL_PATH"))
     parser.add_argument(
         "--runtime_backend",
         choices=RUNTIME_BACKENDS,
@@ -128,6 +147,22 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     model = ModelFactory.load(model_config, det_thresh=0.05)
     startup_times["model_loading"] = time.perf_counter() - stage_start
 
+    pruned_model_path = Path(config.pruned_model_path) if config.pruned_model_path else None
+    pruned_model_loaded = False
+    if pruned_model_path:
+        if not pruned_model_path.exists():
+            raise FileNotFoundError(f"Could not find pruned model artifact: {pruned_model_path}")
+        stage_start = time.perf_counter()
+        state_dict = load_pruned_state_dict(pruned_model_path)
+        missing, unexpected = model.load_state_dict(state_dict, strict=False)
+        if missing or unexpected:
+            raise RuntimeError(
+                "Pruned model state_dict did not match the loaded model. "
+                f"Missing keys: {list(missing)[:10]}, unexpected keys: {list(unexpected)[:10]}"
+            )
+        pruned_model_loaded = True
+        startup_times["pruned_model_loading"] = time.perf_counter() - stage_start
+
     export_dir = config.export_dir or Path("experiments/eval_guide/exported_models")
     default_runtime_metadata = (
         config.metrics_output.with_name(f"{config.metrics_output.stem}_runtime.json")
@@ -165,6 +200,7 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
             compile_mode=config.compile_mode,
             onnx_opset=config.onnx_opset,
             openvino_device=config.openvino_device,
+            openvino_compress_to_fp16=config.openvino_compress_to_fp16,
             export_dir=export_dir,
             model_name=model_config.model_name,
             patch_size=model_config.patch_size,
@@ -253,6 +289,8 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     runtime_metadata = {
         **runtime_result.as_dict(),
         "model_name": model_config.model_name,
+        "pruned_model_path": str(pruned_model_path) if pruned_model_path else None,
+        "pruned_model_loaded": pruned_model_loaded,
         "config_file": str(config.config_file),
         "dataset_csv": str(config.dataset),
         "device": config.device,

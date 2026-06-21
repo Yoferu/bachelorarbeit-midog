@@ -19,7 +19,7 @@ from src.benchmark.runtime_backends import RuntimeBackendUnavailable, configure_
 from src.pruning.save_pruned_model import load_pruned_state_dict
 
 
-RUNTIME_BACKENDS = ("pytorch_eager", "pytorch_compile", "onnxruntime_cpu", "openvino_cpu")
+RUNTIME_BACKENDS = ("pytorch_eager", "pytorch_compile", "onnxruntime_cpu", "openvino_cpu", "tensorrt")
 
 
 def _parse_bool_flag(value: str | bool) -> bool:
@@ -173,6 +173,7 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     validation_suffix = {
         "onnxruntime_cpu": "onnx_validation",
         "openvino_cpu": "openvino_validation",
+        "tensorrt": "tensorrt_validation",
     }.get(config.runtime_backend)
     validation_output = (
         runtime_metadata_output.with_name(f"{runtime_metadata_output.stem}_{validation_suffix}.json")
@@ -180,7 +181,7 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         else None
     )
     runtime_example_input = None
-    if config.runtime_backend in {"onnxruntime_cpu", "openvino_cpu"} and len(filenames) > 0:
+    if config.runtime_backend in {"onnxruntime_cpu", "openvino_cpu", "tensorrt"} and len(filenames) > 0:
         stage_start = time.perf_counter()
         runtime_example_input = _build_runtime_example_input(
             guide_inference=guide_inference,

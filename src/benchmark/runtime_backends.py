@@ -5,9 +5,12 @@ import hashlib
 import io
 import json
 import re
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
+
+import torch
 
 
 RuntimeBackendName = Literal[
@@ -15,6 +18,7 @@ RuntimeBackendName = Literal[
     "pytorch_compile",
     "onnxruntime_cpu",
     "openvino_cpu",
+    "tensorrt",
 ]
 
 
@@ -42,6 +46,16 @@ class RuntimeBackendResult:
     openvino_weights_path: Path | None = None
     openvino_ir_reused: bool | None = None
     openvino_compress_to_fp16: bool | None = None
+    torch_version: str | None = None
+    cuda_available: bool | None = None
+    cuda_device_name: str | None = None
+    tensorrt_version: str | None = None
+    onnx_path: Path | None = None
+    tensorrt_engine_path: Path | None = None
+    tensorrt_engine_reused: bool | None = None
+    precision: str | None = None
+    engine_build_time_seconds: float | None = None
+    inference_latency_excludes_engine_build: bool | None = None
     runtime_limitations: list[str] = field(default_factory=list)
     runtime_warnings: list[str] = field(default_factory=list)
 
@@ -69,6 +83,16 @@ class RuntimeBackendResult:
             "openvino_weights_path": str(self.openvino_weights_path) if self.openvino_weights_path else None,
             "openvino_ir_reused": self.openvino_ir_reused,
             "openvino_compress_to_fp16": self.openvino_compress_to_fp16,
+            "torch_version": self.torch_version,
+            "cuda_available": self.cuda_available,
+            "cuda_device_name": self.cuda_device_name,
+            "tensorrt_version": self.tensorrt_version,
+            "onnx_path": str(self.onnx_path) if self.onnx_path else None,
+            "tensorrt_engine_path": str(self.tensorrt_engine_path) if self.tensorrt_engine_path else None,
+            "tensorrt_engine_reused": self.tensorrt_engine_reused,
+            "precision": self.precision,
+            "engine_build_time_seconds": self.engine_build_time_seconds,
+            "inference_latency_excludes_engine_build": self.inference_latency_excludes_engine_build,
             "runtime_limitations": self.runtime_limitations,
             "runtime_warnings": self.runtime_warnings,
         }
@@ -132,6 +156,19 @@ def configure_runtime_backend(
             onnx_opset=onnx_opset,
             openvino_device=openvino_device,
             openvino_compress_to_fp16=openvino_compress_to_fp16,
+            config_file=config_file,
+            validation_output=validation_output,
+            example_input=example_input,
+        )
+
+    if runtime_backend == "tensorrt":
+        return _configure_tensorrt(
+            model=model,
+            requested_backend=runtime_backend,
+            export_dir=export_dir,
+            model_name=model_name,
+            patch_size=patch_size,
+            onnx_opset=onnx_opset,
             config_file=config_file,
             validation_output=validation_output,
             example_input=example_input,
@@ -484,6 +521,158 @@ def _configure_openvino_cpu(
     )
 
 
+def _configure_tensorrt(
+    *,
+    model: Any,
+    requested_backend: RuntimeBackendName,
+    export_dir: Path,
+    model_name: str,
+    patch_size: int,
+    onnx_opset: int,
+    config_file: Path | None,
+    validation_output: Path | None,
+    example_input: Any | None,
+) -> RuntimeBackendResult:
+    _require_modules(
+        modules=["onnx", "tensorrt", "torch"],
+        install_hint="Install NVIDIA TensorRT with Python bindings, then verify `python -c 'import tensorrt'`.",
+        backend_name=requested_backend,
+    )
+
+    import tensorrt as trt
+    import torch
+
+    warnings: list[str] = []
+    limitations = [
+        "TensorRT uses a static ONNX export of the FCOS backbone/head as an intermediate representation and executes "
+        "that tensor graph on CUDA. FCOS anchor generation, score filtering, top-k, NMS, and final box postprocessing "
+        "remain in PyTorch.",
+        "Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python.",
+        "TensorRT validation compares one representative patch against PyTorch CUDA. Exact numerical equality is not expected.",
+    ]
+
+    torch_version = str(getattr(torch, "__version__", "unknown"))
+    cuda_available = bool(torch.cuda.is_available())
+    cuda_device_name = torch.cuda.get_device_name(0) if cuda_available and torch.cuda.device_count() else None
+    tensorrt_version = str(getattr(trt, "__version__", "unknown"))
+
+    if not cuda_available:
+        raise RuntimeBackendUnavailable("tensorrt requires torch.cuda.is_available() to be true.")
+
+    precision = "fp32"
+    if example_input is None:
+        warnings.append(
+            "No representative benchmark patch was available for TensorRT validation; "
+            "using a zero tensor fallback."
+        )
+        example_input = torch.zeros(3, patch_size, patch_size, dtype=torch.float32)
+    else:
+        example_input = example_input.detach().cpu().float()
+
+    model.eval()
+    model.to("cpu")
+    fcos_model = _unwrap_torchvision_detection_model(model)
+
+    transformed_example_input, feature_shapes = _prepare_tensorrt_fcos_example(
+        fcos_model=fcos_model,
+        example_input=example_input,
+    )
+    export_model = _TensorRtFcosHeadExportWrapper(fcos_model=fcos_model)
+    onnx_path, onnx_reused, onnx_export_method, onnx_warnings = _prepare_tensorrt_fcos_onnx_export(
+        export_model=export_model,
+        export_dir=export_dir,
+        model_name=model_name,
+        patch_size=patch_size,
+        onnx_opset=onnx_opset,
+        config_file=config_file,
+        example_input=transformed_example_input,
+    )
+    warnings.extend(onnx_warnings)
+
+    engine_path = _tensorrt_engine_path(
+        onnx_path=onnx_path,
+        precision=precision,
+        tensorrt_version=tensorrt_version,
+    )
+    engine_reused = engine_path.exists()
+    engine_build_time_seconds = 0.0
+    if not engine_reused:
+        engine_build_time_seconds = _build_tensorrt_engine(
+            onnx_path=onnx_path,
+            engine_path=engine_path,
+            precision=precision,
+            trt=trt,
+        )
+
+    engine = _load_tensorrt_engine(engine_path=engine_path, trt=trt)
+    wrapped_model = _TensorRtFcosDetectionWrapper(
+        engine=engine,
+        trt=trt,
+        fcos_model=fcos_model,
+        feature_shapes=feature_shapes,
+    )
+
+    model.to("cuda")
+    model.eval()
+    fcos_model.eval()
+    wrapped_model.eval()
+    validation = _validate_tensorrt_detection_model(
+        eager_model=model,
+        tensorrt_model=wrapped_model,
+        example_input=example_input,
+        onnx_path=onnx_path,
+        onnx_reused=onnx_reused,
+        onnx_opset=onnx_opset,
+        onnx_export_method=onnx_export_method,
+        engine_path=engine_path,
+        engine_reused=engine_reused,
+        engine_build_time_seconds=engine_build_time_seconds,
+        precision=precision,
+        torch_version=torch_version,
+        cuda_available=cuda_available,
+        cuda_device_name=cuda_device_name,
+        tensorrt_version=tensorrt_version,
+        warnings=warnings,
+        limitations=limitations,
+    )
+    validation_status = str(validation["status"])
+    if validation_status not in {"passed", "passed_with_warnings"}:
+        raise RuntimeBackendUnavailable(
+            f"TensorRT validation failed for {engine_path}. Status: {validation_status}. Details: {validation}"
+        )
+    warnings.extend(str(warning) for warning in validation.get("validation_warnings", []))
+
+    if validation_output:
+        validation_output.parent.mkdir(parents=True, exist_ok=True)
+        validation_output.write_text(json.dumps(validation, indent=2, sort_keys=True), encoding="utf-8")
+
+    return RuntimeBackendResult(
+        model=wrapped_model,
+        runtime_backend=requested_backend,
+        effective_runtime_backend="tensorrt",
+        onnx_opset=onnx_opset,
+        export_path=engine_path,
+        export_reused=engine_reused,
+        validation_path=validation_output,
+        validation_status=validation_status,
+        onnx_export_method=onnx_export_method,
+        source_onnx_path=onnx_path,
+        source_onnx_reused=onnx_reused,
+        torch_version=torch_version,
+        cuda_available=cuda_available,
+        cuda_device_name=cuda_device_name,
+        tensorrt_version=tensorrt_version,
+        onnx_path=onnx_path,
+        tensorrt_engine_path=engine_path,
+        tensorrt_engine_reused=engine_reused,
+        precision=precision,
+        engine_build_time_seconds=engine_build_time_seconds,
+        inference_latency_excludes_engine_build=True,
+        runtime_limitations=limitations,
+        runtime_warnings=warnings,
+    )
+
+
 def _onnx_export_path(
     *,
     export_dir: Path,
@@ -498,6 +687,166 @@ def _onnx_export_path(
         hash_source += config_file.read_bytes()
     config_hash = hashlib.sha256(hash_source).hexdigest()[:10]
     return export_dir / f"{safe_model_name}_patch{patch_size}_opset{onnx_opset}_{config_hash}.onnx"
+
+
+def _tensorrt_fcos_onnx_export_path(
+    *,
+    export_dir: Path,
+    model_name: str,
+    patch_size: int,
+    onnx_opset: int,
+    config_file: Path | None,
+) -> Path:
+    full_graph_path = _onnx_export_path(
+        export_dir=export_dir,
+        model_name=model_name,
+        patch_size=patch_size,
+        onnx_opset=onnx_opset,
+        config_file=config_file,
+    )
+    return full_graph_path.with_name(f"{full_graph_path.stem}_tensorrt_fcos_head.onnx")
+
+
+def _tensorrt_engine_path(*, onnx_path: Path, precision: str, tensorrt_version: str) -> Path:
+    safe_version = re.sub(r"[^A-Za-z0-9_.-]+", "_", tensorrt_version).strip("_") or "unknown"
+    return onnx_path.with_name(f"{onnx_path.stem}_tensorrt_{safe_version}_{precision}.engine")
+
+
+def _unwrap_torchvision_detection_model(model: Any) -> Any:
+    candidate = getattr(model, "model", model)
+    required = ["transform", "backbone", "head", "anchor_generator", "postprocess_detections"]
+    missing = [name for name in required if not hasattr(candidate, name)]
+    if missing:
+        raise RuntimeBackendUnavailable(
+            "tensorrt backend currently supports torchvision FCOS-style models only. "
+            f"Missing attributes: {missing}"
+        )
+    return candidate
+
+
+def _prepare_tensorrt_fcos_example(*, fcos_model: Any, example_input: Any) -> tuple[Any, list[tuple[int, ...]]]:
+    import torch
+
+    with torch.no_grad():
+        image_list, _ = fcos_model.transform([example_input], None)
+        features = fcos_model.backbone(image_list.tensors)
+        if isinstance(features, torch.Tensor):
+            features = [features]
+        else:
+            features = list(features.values())
+    return image_list.tensors.detach().cpu().float().clone(), [tuple(feature.shape) for feature in features]
+
+
+def _prepare_tensorrt_fcos_onnx_export(
+    *,
+    export_model: Any,
+    export_dir: Path,
+    model_name: str,
+    patch_size: int,
+    onnx_opset: int,
+    config_file: Path | None,
+    example_input: Any,
+) -> tuple[Path, bool, str, list[str]]:
+    import onnx
+    import torch
+
+    export_dir.mkdir(parents=True, exist_ok=True)
+    export_path = _tensorrt_fcos_onnx_export_path(
+        export_dir=export_dir,
+        model_name=model_name,
+        patch_size=patch_size,
+        onnx_opset=onnx_opset,
+        config_file=config_file,
+    )
+    export_reused = export_path.exists()
+    warnings: list[str] = []
+    export_method = "reused"
+
+    if not export_reused:
+        export_model.eval()
+        captured = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(captured), contextlib.redirect_stderr(captured):
+                torch.onnx.export(
+                    export_model,
+                    (example_input,),
+                    str(export_path),
+                    opset_version=onnx_opset,
+                    dynamo=False,
+                    input_names=["images"],
+                    output_names=["cls_logits", "bbox_regression", "bbox_ctrness"],
+                )
+            export_method = "legacy_fcos_head"
+            warnings.append(
+                "TensorRT exports only the static FCOS backbone/head graph. "
+                "FCOS anchor generation, score filtering, top-k, NMS, and final box postprocessing remain in PyTorch."
+            )
+        except Exception as exc:
+            raise RuntimeBackendUnavailable(
+                "TensorRT FCOS-head ONNX export failed. "
+                f"Exporter error: {_format_exception(exc)}"
+            ) from exc
+
+    try:
+        onnx.checker.check_model(str(export_path))
+    except Exception as exc:
+        raise RuntimeBackendUnavailable(f"ONNX checker rejected TensorRT FCOS-head export {export_path}: {exc}") from exc
+
+    return export_path, export_reused, export_method, warnings
+
+
+def _build_tensorrt_engine(*, onnx_path: Path, engine_path: Path, precision: str, trt: Any) -> float:
+    logger = trt.Logger(trt.Logger.WARNING)
+    builder = trt.Builder(logger)
+    explicit_batch = getattr(trt.NetworkDefinitionCreationFlag, "EXPLICIT_BATCH", None)
+    network_flags = 0 if explicit_batch is None else 1 << int(explicit_batch)
+    network = builder.create_network(network_flags)
+    parser = trt.OnnxParser(network, logger)
+
+    onnx_bytes = onnx_path.read_bytes()
+    if not parser.parse(onnx_bytes):
+        errors = []
+        for idx in range(parser.num_errors):
+            errors.append(str(parser.get_error(idx)))
+        raise RuntimeBackendUnavailable(
+            f"TensorRT ONNX parser failed for {onnx_path}. Errors: {errors[:10]}"
+        )
+
+    config = builder.create_builder_config()
+    if hasattr(config, "set_memory_pool_limit"):
+        config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, 4 * 1024 * 1024 * 1024)
+    elif hasattr(config, "max_workspace_size"):
+        config.max_workspace_size = 4 * 1024 * 1024 * 1024
+
+    if precision == "fp16":
+        if not getattr(builder, "platform_has_fast_fp16", False):
+            raise RuntimeBackendUnavailable("TensorRT FP16 requested, but this platform does not report fast FP16 support.")
+        config.set_flag(trt.BuilderFlag.FP16)
+    elif precision != "fp32":
+        raise RuntimeBackendUnavailable(f"Unsupported TensorRT precision: {precision}")
+
+    build_start = time.perf_counter()
+    if hasattr(builder, "build_serialized_network"):
+        serialized_engine = builder.build_serialized_network(network, config)
+    else:
+        engine = builder.build_engine(network, config)
+        serialized_engine = engine.serialize() if engine is not None else None
+    build_time = time.perf_counter() - build_start
+    if serialized_engine is None:
+        raise RuntimeBackendUnavailable(f"TensorRT engine build failed for {onnx_path}.")
+
+    engine_path.parent.mkdir(parents=True, exist_ok=True)
+    engine_path.write_bytes(bytes(serialized_engine))
+    return build_time
+
+
+def _load_tensorrt_engine(*, engine_path: Path, trt: Any) -> Any:
+    logger = trt.Logger(trt.Logger.WARNING)
+    runtime = trt.Runtime(logger)
+    engine = runtime.deserialize_cuda_engine(engine_path.read_bytes())
+    if engine is None:
+        raise RuntimeBackendUnavailable(f"TensorRT failed to deserialize engine: {engine_path}")
+    return engine
 
 
 def _export_onnx_detection_model(
@@ -682,6 +1031,258 @@ class _OnnxRuntimeDetectionWrapper:
         return predictions
 
 
+class _TensorRtFcosHeadExportWrapper(torch.nn.Module):
+    def __init__(self, *, fcos_model: Any) -> None:
+        super().__init__()
+        self.fcos_model = fcos_model
+
+    def eval(self) -> Any:
+        self.fcos_model.eval()
+        return self
+
+    def __call__(self, images: Any) -> tuple[Any, Any, Any]:
+        features = self.fcos_model.backbone(images)
+        if isinstance(features, dict):
+            features = list(features.values())
+        elif not isinstance(features, list):
+            features = [features]
+        head_outputs = self.fcos_model.head(features)
+        return head_outputs["cls_logits"], head_outputs["bbox_regression"], head_outputs["bbox_ctrness"]
+
+
+class _TensorRtFcosDetectionWrapper:
+    def __init__(self, *, engine: Any, trt: Any, fcos_model: Any, feature_shapes: list[tuple[int, ...]]) -> None:
+        self.engine = engine
+        self.trt = trt
+        self.fcos_model = fcos_model
+        self.feature_shapes = feature_shapes
+        self.engine_runner = _TensorRtDetectionWrapper(engine=engine, trt=trt)
+
+    def eval(self) -> Any:
+        self.fcos_model.eval()
+        return self
+
+    def to(self, *args: Any, **kwargs: Any) -> Any:
+        self.fcos_model.to(*args, **kwargs)
+        return self
+
+    def __call__(self, images: list[Any], *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+        import torch
+
+        if args or kwargs:
+            raise RuntimeError("tensorrt backend supports inference-only calls: model(images).")
+
+        predictions = []
+        for image in images:
+            original_image_sizes = [tuple(image.shape[-2:])]
+            image_list, _ = self.fcos_model.transform([image], None)
+            image_tensor = image_list.tensors.contiguous().float()
+            if not image_tensor.is_cuda:
+                image_tensor = image_tensor.cuda()
+
+            raw_outputs = _normalize_tensorrt_fcos_outputs(self.engine_runner.run_raw(image_tensor))
+            head_outputs = {
+                "cls_logits": raw_outputs["cls_logits"],
+                "bbox_regression": raw_outputs["bbox_regression"],
+                "bbox_ctrness": raw_outputs["bbox_ctrness"],
+            }
+            num_anchors_per_level = [shape[-2] * shape[-1] for shape in self.feature_shapes]
+            split_head_outputs = {
+                name: list(value.split(num_anchors_per_level, dim=1))
+                for name, value in head_outputs.items()
+            }
+            feature_maps = [
+                torch.empty(shape, dtype=image_tensor.dtype, device=image_tensor.device)
+                for shape in self.feature_shapes
+            ]
+            anchors = self.fcos_model.anchor_generator(image_list, feature_maps)
+            split_anchors = [list(anchor.split(num_anchors_per_level)) for anchor in anchors]
+            detections = self.fcos_model.postprocess_detections(
+                split_head_outputs,
+                split_anchors,
+                image_list.image_sizes,
+            )
+            detections = self.fcos_model.transform.postprocess(
+                detections,
+                image_list.image_sizes,
+                original_image_sizes,
+            )
+            predictions.append({
+                "boxes": detections[0]["boxes"].detach().float().cpu(),
+                "scores": detections[0]["scores"].detach().float().cpu(),
+                "labels": detections[0]["labels"].detach().long().cpu(),
+            })
+        return predictions
+
+
+class _TensorRtDetectionWrapper:
+    def __init__(self, *, engine: Any, trt: Any) -> None:
+        self.engine = engine
+        self.trt = trt
+        self.context = engine.create_execution_context()
+        self.tensor_names = [engine.get_tensor_name(idx) for idx in range(engine.num_io_tensors)]
+        self.input_names = [
+            name for name in self.tensor_names if engine.get_tensor_mode(name) == trt.TensorIOMode.INPUT
+        ]
+        self.output_names = [
+            name for name in self.tensor_names if engine.get_tensor_mode(name) == trt.TensorIOMode.OUTPUT
+        ]
+        if len(self.input_names) != 1:
+            raise RuntimeBackendUnavailable(
+                f"TensorRT backend expects one input tensor, found {len(self.input_names)}: {self.input_names}"
+            )
+        self.input_name = self.input_names[0]
+
+    def eval(self) -> Any:
+        return self
+
+    def to(self, *args: Any, **kwargs: Any) -> Any:
+        return self
+
+    def __call__(self, images: list[Any], *args: Any, **kwargs: Any) -> list[dict[str, Any]]:
+        import torch
+
+        if args or kwargs:
+            raise RuntimeError("tensorrt backend supports inference-only calls: model(images).")
+        if not torch.cuda.is_available():
+            raise RuntimeError("tensorrt backend requires CUDA.")
+
+        predictions = []
+        for image in images:
+            if not image.is_cuda:
+                raise RuntimeError("tensorrt backend requires input tensors on CUDA. Run with DEVICE=cuda.")
+            image_tensor = image.contiguous().float()
+            if any(dim < 0 for dim in self.engine.get_tensor_shape(self.input_name)):
+                self.context.set_input_shape(self.input_name, tuple(image_tensor.shape))
+            self.context.set_tensor_address(self.input_name, int(image_tensor.data_ptr()))
+
+            outputs: dict[str, Any] = {}
+            for output_name in self.output_names:
+                output_shape = tuple(int(dim) for dim in self.context.get_tensor_shape(output_name))
+                if any(dim < 0 for dim in output_shape):
+                    raise RuntimeError(f"TensorRT output {output_name!r} has unresolved shape {output_shape}.")
+                output = torch.empty(
+                    output_shape,
+                    device=image_tensor.device,
+                    dtype=_torch_dtype_from_tensorrt(self.engine.get_tensor_dtype(output_name), self.trt),
+                )
+                self.context.set_tensor_address(output_name, int(output.data_ptr()))
+                outputs[output_name] = output
+
+            stream = torch.cuda.current_stream(device=image_tensor.device)
+            if not self.context.execute_async_v3(stream_handle=stream.cuda_stream):
+                raise RuntimeError("TensorRT execute_async_v3 failed.")
+            stream.synchronize()
+
+            output_roles = _infer_tensorrt_detection_output_roles(outputs)
+            predictions.append(
+                {
+                    "boxes": outputs[output_roles["boxes"]].detach().float().cpu(),
+                    "scores": outputs[output_roles["scores"]].detach().float().cpu(),
+                    "labels": outputs[output_roles["labels"]].detach().long().cpu(),
+                }
+            )
+        return predictions
+
+    def run_raw(self, image_tensor: Any) -> dict[str, Any]:
+        import torch
+
+        if not image_tensor.is_cuda:
+            raise RuntimeError("tensorrt backend requires input tensors on CUDA. Run with DEVICE=cuda.")
+        image_tensor = image_tensor.contiguous().float()
+        if any(dim < 0 for dim in self.engine.get_tensor_shape(self.input_name)):
+            self.context.set_input_shape(self.input_name, tuple(image_tensor.shape))
+        self.context.set_tensor_address(self.input_name, int(image_tensor.data_ptr()))
+
+        outputs: dict[str, Any] = {}
+        for output_name in self.output_names:
+            output_shape = tuple(int(dim) for dim in self.context.get_tensor_shape(output_name))
+            if any(dim < 0 for dim in output_shape):
+                raise RuntimeError(f"TensorRT output {output_name!r} has unresolved shape {output_shape}.")
+            output = torch.empty(
+                output_shape,
+                device=image_tensor.device,
+                dtype=_torch_dtype_from_tensorrt(self.engine.get_tensor_dtype(output_name), self.trt),
+            )
+            self.context.set_tensor_address(output_name, int(output.data_ptr()))
+            outputs[output_name] = output
+
+        stream = torch.cuda.current_stream(device=image_tensor.device)
+        if not self.context.execute_async_v3(stream_handle=stream.cuda_stream):
+            raise RuntimeError("TensorRT execute_async_v3 failed.")
+        stream.synchronize()
+        return outputs
+
+
+def _torch_dtype_from_tensorrt(dtype: Any, trt: Any) -> Any:
+    import torch
+
+    if dtype == trt.float32:
+        return torch.float32
+    if dtype == trt.float16:
+        return torch.float16
+    if dtype == trt.int32:
+        return torch.int32
+    if hasattr(trt, "int64") and dtype == trt.int64:
+        return torch.int64
+    if dtype == trt.bool:
+        return torch.bool
+    raise RuntimeError(f"Unsupported TensorRT tensor dtype: {dtype}")
+
+
+def _infer_tensorrt_detection_output_roles(outputs: dict[str, Any]) -> dict[str, str]:
+    import torch
+
+    roles: dict[str, str] = {}
+    for name, tensor in outputs.items():
+        shape = list(tensor.shape)
+        if len(shape) == 2 and shape[-1] == 4 and tensor.dtype in {torch.float16, torch.float32}:
+            roles["boxes"] = name
+        elif len(shape) == 1 and tensor.dtype in {torch.float16, torch.float32}:
+            roles["scores"] = name
+        elif len(shape) == 1 and tensor.dtype in {torch.int32, torch.int64}:
+            roles["labels"] = name
+
+    missing = {"boxes", "scores", "labels"} - roles.keys()
+    if missing:
+        output_summary = {
+            name: {"shape": list(tensor.shape), "dtype": str(tensor.dtype)}
+            for name, tensor in outputs.items()
+        }
+        raise RuntimeBackendUnavailable(
+            "Could not map TensorRT outputs to torchvision detection fields "
+            f"{sorted(missing)}. Outputs: {output_summary}"
+        )
+    return roles
+
+
+def _normalize_tensorrt_fcos_outputs(outputs: dict[str, Any]) -> dict[str, Any]:
+    if {"cls_logits", "bbox_regression", "bbox_ctrness"}.issubset(outputs):
+        return outputs
+
+    roles: dict[str, str] = {}
+    for name, tensor in outputs.items():
+        shape = list(tensor.shape)
+        if len(shape) == 3 and shape[-1] == 2:
+            roles["cls_logits"] = name
+        elif len(shape) == 3 and shape[-1] == 4:
+            roles["bbox_regression"] = name
+        elif len(shape) == 3 and shape[-1] == 1:
+            roles["bbox_ctrness"] = name
+
+    missing = {"cls_logits", "bbox_regression", "bbox_ctrness"} - roles.keys()
+    if missing:
+        output_summary = {
+            name: {"shape": list(tensor.shape), "dtype": str(tensor.dtype)}
+            for name, tensor in outputs.items()
+        }
+        raise RuntimeBackendUnavailable(
+            "Could not map TensorRT outputs to FCOS head fields "
+            f"{sorted(missing)}. Outputs: {output_summary}"
+        )
+    return {role: outputs[name] for role, name in roles.items()}
+
+
 def _infer_openvino_detection_output_roles(outputs: list[Any]) -> dict[str, int]:
     roles: dict[str, int] = {}
     for idx, output in enumerate(outputs):
@@ -823,6 +1424,110 @@ def _validate_openvino_detection_model(
         "onnx_export_method": onnx_export_method,
         "openvino_output_roles": openvino_output_roles,
         "onnx_output_roles": onnx_output_roles,
+        "comparisons": comparisons,
+        "validation_warnings": validation_warnings,
+        "warnings": warnings,
+        "limitations": limitations,
+    }
+
+
+def _validate_tensorrt_detection_model(
+    *,
+    eager_model: Any,
+    tensorrt_model: Any,
+    example_input: Any,
+    onnx_path: Path,
+    onnx_reused: bool,
+    onnx_opset: int,
+    onnx_export_method: str,
+    engine_path: Path,
+    engine_reused: bool,
+    engine_build_time_seconds: float,
+    precision: str,
+    torch_version: str,
+    cuda_available: bool,
+    cuda_device_name: str | None,
+    tensorrt_version: str,
+    warnings: list[str],
+    limitations: list[str],
+) -> dict[str, Any]:
+    import numpy as np
+    import torch
+
+    validation_warnings: list[str] = []
+    status = "passed"
+    cuda_input = example_input.detach().cuda().float()
+    eager_model.eval()
+    tensorrt_model.eval()
+    with torch.inference_mode():
+        eager_output = eager_model([cuda_input])[0]
+        tensorrt_output = tensorrt_model([cuda_input])[0]
+
+    comparisons: dict[str, Any] = {}
+    for role in ("boxes", "scores", "labels"):
+        eager_value = eager_output[role].detach().cpu().numpy()
+        tensorrt_value = tensorrt_output[role].detach().cpu().numpy()
+        comparison: dict[str, Any] = {
+            "pytorch_shape": list(eager_value.shape),
+            "tensorrt_shape": list(tensorrt_value.shape),
+            "pytorch_count": int(eager_value.shape[0]) if eager_value.ndim > 0 else int(eager_value.size),
+            "tensorrt_count": int(tensorrt_value.shape[0]) if tensorrt_value.ndim > 0 else int(tensorrt_value.size),
+            "pytorch_dtype": str(eager_value.dtype),
+            "tensorrt_dtype": str(tensorrt_value.dtype),
+        }
+
+        if eager_value.shape != tensorrt_value.shape:
+            comparison["shape_match"] = False
+            same_rank = eager_value.ndim == tensorrt_value.ndim
+            expected_detection_shape = role in {"scores", "labels"} and same_rank and eager_value.ndim == 1
+            expected_box_shape = (
+                role == "boxes"
+                and same_rank
+                and eager_value.ndim == 2
+                and eager_value.shape[-1] == 4
+                and tensorrt_value.shape[-1] == 4
+            )
+            if expected_detection_shape or expected_box_shape:
+                status = "passed_with_warnings"
+                validation_warnings.append(
+                    f"TensorRT {role} detection count differs from PyTorch CUDA on the validation patch: "
+                    f"pytorch={list(eager_value.shape)}, tensorrt={list(tensorrt_value.shape)}. "
+                    "This can happen after exported FCOS filtering/NMS due to backend numeric differences."
+                )
+            else:
+                status = "failed"
+        else:
+            comparison["shape_match"] = True
+            if np.issubdtype(eager_value.dtype, np.number) and np.issubdtype(tensorrt_value.dtype, np.number):
+                max_abs_diff = float(np.max(np.abs(eager_value - tensorrt_value))) if eager_value.size else 0.0
+                comparison["max_abs_diff"] = max_abs_diff
+                comparison["allclose"] = bool(np.allclose(eager_value, tensorrt_value, rtol=1e-3, atol=1e-4))
+                if role in {"boxes", "scores"} and not comparison["allclose"]:
+                    if status == "passed":
+                        status = "passed_with_warnings"
+                    validation_warnings.append(
+                        f"TensorRT {role} is not numerically allclose to PyTorch CUDA on the validation patch "
+                        f"(max_abs_diff={max_abs_diff})."
+                    )
+        comparisons[role] = comparison
+
+    return {
+        "status": status,
+        "runtime_backend": "tensorrt",
+        "device": "cuda",
+        "torch_version": torch_version,
+        "cuda_available": cuda_available,
+        "cuda_device_name": cuda_device_name,
+        "tensorrt_version": tensorrt_version,
+        "onnx_path": str(onnx_path),
+        "source_onnx_reused": onnx_reused,
+        "onnx_opset": onnx_opset,
+        "onnx_export_method": onnx_export_method,
+        "tensorrt_engine_path": str(engine_path),
+        "tensorrt_engine_reused": engine_reused,
+        "precision": precision,
+        "engine_build_time_seconds": engine_build_time_seconds,
+        "inference_latency_excludes_engine_build": True,
         "comparisons": comparisons,
         "validation_warnings": validation_warnings,
         "warnings": warnings,

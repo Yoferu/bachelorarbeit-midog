@@ -1,0 +1,74 @@
+{
+  "comparisons": {
+    "boxes": {
+      "allclose": true,
+      "max_abs_diff": 0.01153564453125,
+      "pytorch_count": 56,
+      "pytorch_dtype": "float32",
+      "pytorch_shape": [
+        56,
+        4
+      ],
+      "shape_match": true,
+      "tensorrt_count": 56,
+      "tensorrt_dtype": "float32",
+      "tensorrt_shape": [
+        56,
+        4
+      ]
+    },
+    "labels": {
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "pytorch_count": 56,
+      "pytorch_dtype": "int64",
+      "pytorch_shape": [
+        56
+      ],
+      "shape_match": true,
+      "tensorrt_count": 56,
+      "tensorrt_dtype": "int64",
+      "tensorrt_shape": [
+        56
+      ]
+    },
+    "scores": {
+      "allclose": true,
+      "max_abs_diff": 0.00023752450942993164,
+      "pytorch_count": 56,
+      "pytorch_dtype": "float32",
+      "pytorch_shape": [
+        56
+      ],
+      "shape_match": true,
+      "tensorrt_count": 56,
+      "tensorrt_dtype": "float32",
+      "tensorrt_shape": [
+        56
+      ]
+    }
+  },
+  "cuda_available": true,
+  "cuda_device_name": "NVIDIA GeForce RTX 5090",
+  "device": "cuda",
+  "engine_build_time_seconds": 0.0,
+  "inference_latency_excludes_engine_build": true,
+  "limitations": [
+    "TensorRT uses a static ONNX export of the FCOS backbone/head as an intermediate representation and executes that tensor graph on CUDA. FCOS anchor generation, score filtering, top-k, NMS, and final box postprocessing remain in PyTorch.",
+    "Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python.",
+    "TensorRT validation compares one representative patch against PyTorch CUDA. Exact numerical equality is not expected."
+  ],
+  "onnx_export_method": "reused",
+  "onnx_opset": 18,
+  "onnx_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_tensorrt_fcos_head.onnx",
+  "precision": "fp32",
+  "runtime_backend": "tensorrt",
+  "source_onnx_reused": true,
+  "status": "passed",
+  "tensorrt_engine_path": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8_tensorrt_fcos_head_tensorrt_11.0.0.114_fp32.engine",
+  "tensorrt_engine_reused": true,
+  "tensorrt_version": "11.0.0.114",
+  "torch_version": "2.11.0+cu130",
+  "validation_warnings": [],
+  "warnings": []
+}

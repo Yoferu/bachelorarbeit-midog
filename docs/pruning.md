@@ -225,3 +225,26 @@ loadable checkpoint is written under `experiments/pruning/models/`.
 Do not use this masked fine-tuned checkpoint for speedup claims. Runtime
 benchmarking should wait for either stronger smoke recovery or a physical
 structured-pruning implementation that actually removes compute.
+
+## DepGraph Structural Pruning Result
+
+The dependency-aware physical pruning experiment for `FCOS_18` is complete and
+documented here:
+
+```text
+experiments/pruning/depgraph_structural_pruning_experiment_summary.md
+```
+
+The initial DepGraph sweep was followed by an extended FPN+head-only quick
+evaluation. Candidate selection is now complete:
+
+- `FCOS_18_depgraph_fpn_head_60pct.pt` is the selected main candidate.
+- `FCOS_18_depgraph_fpn_head_50pct.pt` is the conservative backup.
+- `FCOS_18_depgraph_fpn_head_70pct.pt` is the boundary candidate.
+
+The 60% candidate provides the best useful tradeoff in the measured quick run:
+21.71% MAC reduction, 18.25% CPU forward-pass speedup, and F1 0.7801 versus
+0.8018 for unpruned FCOS_18. It has not been fine-tuned. Recovery fine-tuning is
+required only if the full held-out evaluation shows unacceptable degradation.
+The final full evaluation and `CPU_4C_LIMITED` measurements are tracked in
+`experiments/pruning/final_pruning_summary.md`.

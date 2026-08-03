@@ -1,0 +1,31 @@
+FPN+Head Quick Benchmark Summary
+Variant	Params After	MAC Reduction	Quick Detections	Quick F1	Quick Runtime	Quick Forward Runtime	Forward Speedup	Decision
+Baseline			559	0.8018	1541.88s	1522.60s		baseline
+20%	17,292,935	8.50%	534	0.8037	1496.05s	1477.79s	2.94%	no fine-tune
+30%	16,834,247	11.85%	546	0.7985	1432.91s	1415.02s	7.07%	no fine-tune
+40%	16,417,031	15.02%	535	0.7974	1469.74s	1452.73s	4.59%	no fine-tune
+50%	16,041,287	18.01%	519	0.8019	1389.98s	1372.15s	9.88%	no fine-tune
+60%	15,604,807	21.71%	413	0.7801	1263.55s	1244.71s	18.25%	candidate
+70%	15,325,831	24.29%	341	0.7152	1245.61s	1227.08s	19.41%	candidate / boundary
+
+Speed vs Accuracy Tradeoff
+Variant	MAC Reduction	Forward Speedup	Quick F1 Change vs Baseline	Quick Detection Change vs Baseline	Interpretation
+Baseline			0.0000	0 / 0.0%	reference model
+20%	8.50%	2.94%	+0.0019	-25 / -4.5%	quality preserved, speedup too small
+30%	11.85%	7.07%	-0.0033	-13 / -2.3%	quality mostly preserved, still below speed target
+40%	15.02%	4.59%	-0.0044	-24 / -4.3%	inconsistent speed gain despite more pruning
+50%	18.01%	9.88%	+0.0001	-40 / -7.2%	conservative backup; nearly reaches speed target
+60%	21.71%	18.25%	-0.0217	-146 / -26.1%	best main candidate; clear speedup with moderate quality loss
+70%	24.29%	19.41%	-0.0866	-218 / -39.0%	fastest, but quality loss is too high
+
+Raw Prediction Diagnostic for 20/30/40
+Variant	Artifact Hash	Prediction Hash	Pre-threshold Count	Post-NMS Count	Post-threshold Count	TP/FP/FN	Interpretation
+20%	effc7c44bac6	e797965acd04	14,032	4,419	25	21/4/15	distinct artifact and raw predictions
+30%	bc81be70796a	381005782592	14,418	4,613	25	21/4/15	distinct artifact and raw predictions
+40%	dbcf255a0f6f	98c8498fa247	15,426	5,294	25	21/4/15	distinct artifact and raw predictions
+
+Presentation Decision
+Candidate	Strength	Weakness	Decision
+50%	Almost baseline F1; close to 10% forward speedup	Does not clear the 10% speedup target	Conservative backup
+60%	Best main candidate; 18.25% forward speedup	Moderate F1 and detection-count loss	Main candidate
+70%	Fastest variant	Too much detection-quality loss	Boundary candidate

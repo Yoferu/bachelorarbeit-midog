@@ -20,6 +20,11 @@ class PruningConfig:
     eval_config: Path | None = None
     pruning_mode: str = "masked"
     notes: str | None = None
+    example_input_size: int | None = None
+    round_to: int | None = None
+    global_pruning: bool = False
+    max_pruning_ratio: float = 1.0
+    ignored_modules: list[str] = field(default_factory=list)
 
     @classmethod
     def load(cls, path: Path) -> "PruningConfig":
@@ -35,4 +40,3 @@ class PruningConfig:
         data["guide_repo"] = str(self.guide_repo)
         data["eval_config"] = str(self.eval_config) if self.eval_config else None
         return data
-

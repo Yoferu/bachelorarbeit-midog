@@ -100,3 +100,9 @@ def load_pruned_state_dict(path: Path) -> dict[str, torch.Tensor]:
         return artifact
     raise TypeError(f"Unsupported pruned artifact format: {path}")
 
+
+def load_pruned_model_object(path: Path) -> Any | None:
+    artifact = torch.load(path, map_location="cpu", weights_only=False)
+    if isinstance(artifact, dict) and "model_object" in artifact:
+        return artifact["model_object"]
+    return None

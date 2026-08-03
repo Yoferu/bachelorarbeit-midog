@@ -1,0 +1,14 @@
+{
+  "source_dataset": "data/midogpp_guide_eval_xvalidation_quick.csv",
+  "subset_dataset": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "selection_method": "first three unique filenames in deterministic source CSV order",
+  "selected_image_ids": [
+    "413.tiff",
+    "366.tiff",
+    "487.tiff"
+  ],
+  "row_count": 72,
+  "split_values": [
+    "test"
+  ]
+}

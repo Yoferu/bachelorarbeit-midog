@@ -1,0 +1,103 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "num_images": 3,
+  "num_patches": 228,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 243.8521020240005,
+  "startup_time_s": 0.3090907729965693,
+  "startup_stages_s": {
+    "dataset_loading": 0.0010223989993392024,
+    "dataset_box_conversion": 0.0009446059993933886,
+    "config_loading": 0.0007185799986473285,
+    "model_loading": 0.22981850399810355,
+    "pruned_model_loading": 0.0762984389984922,
+    "runtime_backend_setup": 5.6974000472109765e-05,
+    "inference_setup": 0.00023127100212150253
+  },
+  "measured_inference_time_s": 242.4224294739979,
+  "evaluation_metrics_s": 0.21806042599928332,
+  "output_serialization_s": 0.0001701420005701948,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 0.842551301997446,
+      "percent_of_measured_inference": 0.3475550112362097
+    },
+    "forward_pass": {
+      "total_s": 241.09547866901266,
+      "percent_of_measured_inference": 99.45262869947123
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.09370249100174988,
+      "percent_of_measured_inference": 0.03865256659833959
+    },
+    "model_device_setup": {
+      "total_s": 0.004455561000213493,
+      "percent_of_measured_inference": 0.0018379326574199661
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.38125448699793196,
+      "percent_of_measured_inference": 0.15726865200764154
+    }
+  },
+  "per_image_s": [
+    73.97127955799806,
+    93.34090651500082,
+    75.11024340099902
+  ],
+  "patches_per_image": [
+    70,
+    88,
+    70
+  ],
+  "mean_per_image_s": 80.80747649133264,
+  "median_per_image_s": 75.11024340099902,
+  "mean_per_patch_s": 1.0632562696227978,
+  "median_per_patch_s": 1.0606921194886458,
+  "runtime_backend": "pytorch_eager",
+  "effective_runtime_backend": "pytorch_eager",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": null,
+  "onnx_model_path": null,
+  "openvino_device": null,
+  "export_path": null,
+  "export_reused": null,
+  "execution_providers": null,
+  "validation_path": null,
+  "validation_status": null,
+  "onnx_export_method": null,
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [],
+  "runtime_warnings": [],
+  "model_name": "FCOS_18",
+  "pruned_model_path": "experiments/distillation/runs/fcos_x101_to_mobilenetv3_small/student_final.pt",
+  "pruned_model_loaded": true,
+  "model_artifact_load_method": "registry",
+  "model_artifact_source": "experiments/distillation/runs/fcos_x101_to_mobilenetv3_small/metadata.json, experiments/distillation/runs/fcos_x101_to_mobilenetv3_small/resolved_config.yaml, checkpoint distillation_config, checkpoint student_architecture",
+  "total_runtime_s": 243.85196101800102,
+  "pipeline_timing_enabled": true
+}

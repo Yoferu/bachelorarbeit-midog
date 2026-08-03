@@ -1,0 +1,490 @@
+{
+  "artifact_path": "/home/johan/bachelorarbeit-midog/experiments/pruning/models/FCOS_18_depgraph_head_only_20pct.pt",
+  "artifact_type": "depgraph_structural_pruned_detection_model",
+  "base_checkpoint": "/home/johan/bachelorarbeit-midog/repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt",
+  "base_eval_config": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "base_model": "FCOS_18",
+  "git_commit": "c445a0c11a4aa771a66426d0fda196fe92aae196",
+  "notes": "DepGraph structural pruning sweep variant limited to internal FCOS detection head convolutions. Backbone, FPN and fixed output predictors are ignored as root pruning targets.\n",
+  "pruning_config": {
+    "device": "cpu",
+    "eval_config": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+    "example_input_size": 256,
+    "excluded_modules": [
+      "backbone.body.conv1",
+      "head.classification_head.cls_logits",
+      "head.regression_head.bbox_reg",
+      "head.regression_head.bbox_ctrness"
+    ],
+    "global_pruning": false,
+    "guide_repo": "repos/MIDOG_2025_Guide",
+    "ignored_modules": [],
+    "max_pruning_ratio": 0.4,
+    "model": "FCOS_18",
+    "notes": "DepGraph structural pruning sweep variant limited to internal FCOS detection head convolutions. Backbone, FPN and fixed output predictors are ignored as root pruning targets.\n",
+    "pruning_mode": "depgraph_structural",
+    "pruning_ratio": 0.2,
+    "pruning_type": "depgraph_magnitude_l2",
+    "round_to": 8,
+    "seed": 42,
+    "target_scope": "depgraph_head_only"
+  },
+  "pruning_result": {
+    "candidate_scope_counts": {
+      "head": 8
+    },
+    "excluded_modules": [
+      {
+        "name": "backbone.body.conv1",
+        "reason": "configured excluded module"
+      },
+      {
+        "name": "backbone.body.layer1.0.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer1.0.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer1.1.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer1.1.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer2.0.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer2.0.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer2.0.downsample.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer2.1.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer2.1.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer3.0.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer3.0.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer3.0.downsample.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer3.1.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer3.1.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer4.0.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer4.0.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer4.0.downsample.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer4.1.conv1",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.body.layer4.1.conv2",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.inner_blocks.0.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.inner_blocks.1.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.inner_blocks.2.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.inner_blocks.3.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.layer_blocks.0.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.layer_blocks.1.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.layer_blocks.2.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "backbone.fpn.layer_blocks.3.0",
+        "reason": "outside configured target_scope=depgraph_head_only"
+      },
+      {
+        "name": "head.classification_head.cls_logits",
+        "reason": "configured excluded module"
+      },
+      {
+        "name": "head.regression_head.bbox_reg",
+        "reason": "configured excluded module"
+      },
+      {
+        "name": "head.regression_head.bbox_ctrness",
+        "reason": "configured excluded module"
+      }
+    ],
+    "ignored_modules": [
+      "backbone.body.conv1",
+      "head.classification_head.cls_logits",
+      "head.regression_head.bbox_reg",
+      "head.regression_head.bbox_ctrness",
+      "backbone.body.layer1.0.conv1",
+      "backbone.body.layer1.0.conv2",
+      "backbone.body.layer1.1.conv1",
+      "backbone.body.layer1.1.conv2",
+      "backbone.body.layer2.0.conv1",
+      "backbone.body.layer2.0.conv2",
+      "backbone.body.layer2.0.downsample.0",
+      "backbone.body.layer2.1.conv1",
+      "backbone.body.layer2.1.conv2",
+      "backbone.body.layer3.0.conv1",
+      "backbone.body.layer3.0.conv2",
+      "backbone.body.layer3.0.downsample.0",
+      "backbone.body.layer3.1.conv1",
+      "backbone.body.layer3.1.conv2",
+      "backbone.body.layer4.0.conv1",
+      "backbone.body.layer4.0.conv2",
+      "backbone.body.layer4.0.downsample.0",
+      "backbone.body.layer4.1.conv1",
+      "backbone.body.layer4.1.conv2",
+      "backbone.fpn.inner_blocks.0.0",
+      "backbone.fpn.inner_blocks.1.0",
+      "backbone.fpn.inner_blocks.2.0",
+      "backbone.fpn.inner_blocks.3.0",
+      "backbone.fpn.layer_blocks.0.0",
+      "backbone.fpn.layer_blocks.1.0",
+      "backbone.fpn.layer_blocks.2.0",
+      "backbone.fpn.layer_blocks.3.0"
+    ],
+    "macs_after": 505502520064.0,
+    "macs_before": 505502520064.0,
+    "macs_error_after": null,
+    "macs_error_before": null,
+    "macs_removed": 0.0,
+    "macs_removed_ratio": 0.0,
+    "module_results": [],
+    "parameters_after_total": 18524487,
+    "parameters_before_total": 18524487,
+    "parameters_removed_ratio": 0.0,
+    "parameters_removed_total": 0,
+    "physical_channel_removal": true,
+    "plan": {
+      "candidate_count": 8,
+      "candidate_modules": [
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.classification_head.conv.0",
+          "out_channels": 256,
+          "scope": "head"
+        },
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.classification_head.conv.3",
+          "out_channels": 256,
+          "scope": "head"
+        },
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.classification_head.conv.6",
+          "out_channels": 256,
+          "scope": "head"
+        },
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.classification_head.conv.9",
+          "out_channels": 256,
+          "scope": "head"
+        },
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.regression_head.conv.0",
+          "out_channels": 256,
+          "scope": "head"
+        },
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.regression_head.conv.3",
+          "out_channels": 256,
+          "scope": "head"
+        },
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.regression_head.conv.6",
+          "out_channels": 256,
+          "scope": "head"
+        },
+        {
+          "in_channels": 256,
+          "kernel_size": [
+            3,
+            3
+          ],
+          "name": "head.regression_head.conv.9",
+          "out_channels": 256,
+          "scope": "head"
+        }
+      ],
+      "conv2d_count": 39,
+      "detection_model_class": "torchvision.models.detection.fcos.FCOS",
+      "excluded_modules": [
+        {
+          "name": "backbone.body.conv1",
+          "reason": "configured excluded module"
+        },
+        {
+          "name": "backbone.body.layer1.0.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer1.0.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer1.1.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer1.1.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer2.0.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer2.0.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer2.0.downsample.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer2.1.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer2.1.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer3.0.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer3.0.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer3.0.downsample.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer3.1.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer3.1.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer4.0.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer4.0.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer4.0.downsample.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer4.1.conv1",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.body.layer4.1.conv2",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.inner_blocks.0.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.inner_blocks.1.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.inner_blocks.2.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.inner_blocks.3.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.layer_blocks.0.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.layer_blocks.1.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.layer_blocks.2.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "backbone.fpn.layer_blocks.3.0",
+          "reason": "outside configured target_scope=depgraph_head_only"
+        },
+        {
+          "name": "head.classification_head.cls_logits",
+          "reason": "configured excluded module"
+        },
+        {
+          "name": "head.regression_head.bbox_reg",
+          "reason": "configured excluded module"
+        },
+        {
+          "name": "head.regression_head.bbox_ctrness",
+          "reason": "configured excluded module"
+        }
+      ],
+      "ignored_modules": [
+        "backbone.body.conv1",
+        "head.classification_head.cls_logits",
+        "head.regression_head.bbox_reg",
+        "head.regression_head.bbox_ctrness",
+        "backbone.body.layer1.0.conv1",
+        "backbone.body.layer1.0.conv2",
+        "backbone.body.layer1.1.conv1",
+        "backbone.body.layer1.1.conv2",
+        "backbone.body.layer2.0.conv1",
+        "backbone.body.layer2.0.conv2",
+        "backbone.body.layer2.0.downsample.0",
+        "backbone.body.layer2.1.conv1",
+        "backbone.body.layer2.1.conv2",
+        "backbone.body.layer3.0.conv1",
+        "backbone.body.layer3.0.conv2",
+        "backbone.body.layer3.0.downsample.0",
+        "backbone.body.layer3.1.conv1",
+        "backbone.body.layer3.1.conv2",
+        "backbone.body.layer4.0.conv1",
+        "backbone.body.layer4.0.conv2",
+        "backbone.body.layer4.0.downsample.0",
+        "backbone.body.layer4.1.conv1",
+        "backbone.body.layer4.1.conv2",
+        "backbone.fpn.inner_blocks.0.0",
+        "backbone.fpn.inner_blocks.1.0",
+        "backbone.fpn.inner_blocks.2.0",
+        "backbone.fpn.inner_blocks.3.0",
+        "backbone.fpn.layer_blocks.0.0",
+        "backbone.fpn.layer_blocks.1.0",
+        "backbone.fpn.layer_blocks.2.0",
+        "backbone.fpn.layer_blocks.3.0"
+      ],
+      "missing_ignored_modules": [],
+      "scope_counts": {
+        "head": 8
+      },
+      "target_scope": "depgraph_head_only",
+      "target_scopes": [
+        "head"
+      ]
+    },
+    "pruned_layers": [],
+    "pruning_library": "torch-pruning",
+    "pruning_library_version": "1.6.0",
+    "pruning_mode": "depgraph_structural",
+    "target_modules": [
+      "head.classification_head.conv.0",
+      "head.classification_head.conv.3",
+      "head.classification_head.conv.6",
+      "head.classification_head.conv.9",
+      "head.regression_head.conv.0",
+      "head.regression_head.conv.3",
+      "head.regression_head.conv.6",
+      "head.regression_head.conv.9"
+    ],
+    "torch_pruning_counted_params_after": 18524487,
+    "torch_pruning_counted_params_before": 18524487
+  },
+  "smoke_inference": {
+    "absolute_difference": 0,
+    "input_shape": [
+      1,
+      3,
+      256,
+      256
+    ],
+    "original_detection_count": 178,
+    "pruned_detection_count": 178
+  },
+  "timestamp": "2026-06-21T22:06:38.097232+00:00"
+}

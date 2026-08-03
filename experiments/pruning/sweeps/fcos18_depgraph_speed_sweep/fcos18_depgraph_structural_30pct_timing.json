@@ -1,0 +1,101 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "/home/johan/bachelorarbeit-midog/experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "/home/johan/bachelorarbeit-midog/data/midogpp_guide_eval_xvalidation_smoke.csv",
+  "num_images": 3,
+  "num_patches": 264,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 161.19754412900056,
+  "startup_time_s": 0.2634365079993586,
+  "startup_stages_s": {
+    "dataset_loading": 0.0011153149998790468,
+    "dataset_box_conversion": 0.0009658549997766386,
+    "config_loading": 0.0007280569998329156,
+    "model_loading": 0.24726920200009772,
+    "pruned_model_loading": 0.013121758999659505,
+    "runtime_backend_setup": 4.45100004071719e-05,
+    "inference_setup": 0.00019180999970558332
+  },
+  "measured_inference_time_s": 159.29532080900026,
+  "evaluation_metrics_s": 0.0463079729997844,
+  "output_serialization_s": 0.00018503899991628714,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 0.8866149430023142,
+      "percent_of_measured_inference": 0.5565856790391172
+    },
+    "forward_pass": {
+      "total_s": 158.2461915749991,
+      "percent_of_measured_inference": 99.34139356468663
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.11747351199937839,
+      "percent_of_measured_inference": 0.07374573929904228
+    },
+    "model_device_setup": {
+      "total_s": 0.003408520000448334,
+      "percent_of_measured_inference": 0.0021397489789014264
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.03535871100029908,
+      "percent_of_measured_inference": 0.022196955202905936
+    }
+  },
+  "per_image_s": [
+    52.1702408150004,
+    53.327258065000024,
+    53.79782192899984
+  ],
+  "patches_per_image": [
+    88,
+    88,
+    88
+  ],
+  "mean_per_image_s": 53.09844026966675,
+  "median_per_image_s": 53.327258065000024,
+  "mean_per_patch_s": 0.6033913667007585,
+  "median_per_patch_s": 0.6059915689204548,
+  "runtime_backend": "pytorch_eager",
+  "effective_runtime_backend": "pytorch_eager",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": null,
+  "onnx_model_path": null,
+  "openvino_device": null,
+  "export_path": null,
+  "export_reused": null,
+  "execution_providers": null,
+  "validation_path": null,
+  "validation_status": null,
+  "onnx_export_method": null,
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [],
+  "runtime_warnings": [],
+  "model_name": "FCOS_18",
+  "pruned_model_path": "/home/johan/bachelorarbeit-midog/experiments/pruning/models/FCOS_18_depgraph_structural_30pct.pt",
+  "pruned_model_loaded": true,
+  "total_runtime_s": 161.1973982090003,
+  "pipeline_timing_enabled": true
+}

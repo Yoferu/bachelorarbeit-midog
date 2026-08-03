@@ -1,0 +1,22 @@
+model: FCOS_18
+pruning_type: depgraph_magnitude_l2
+pruning_ratio: 0.20
+target_scope: depgraph_fpn_head
+pruning_mode: depgraph_structural
+excluded_modules:
+  - backbone.body.conv1
+  - head.classification_head.cls_logits
+  - head.regression_head.bbox_reg
+  - head.regression_head.bbox_ctrness
+device: cpu
+seed: 42
+guide_repo: repos/MIDOG_2025_Guide
+eval_config: experiments/eval_guide/configs/FCOS_18_eval.yaml
+example_input_size: 256
+round_to: 8
+global_pruning: false
+max_pruning_ratio: 0.40
+notes: >
+  DepGraph structural pruning sweep variant over FPN and internal FCOS detection
+  head convolutions. ResNet backbone convolutions and fixed output predictors
+  are ignored as root pruning targets.

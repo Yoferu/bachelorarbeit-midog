@@ -30,6 +30,9 @@ ALIASES = {
     "fcos18": "fcos18",
     "fcos_18": "fcos18",
     "FCOS_18": "fcos18",
+    "fcos18_depgraph_fpn_head_60pct": "fcos18_depgraph_fpn_head_60pct",
+    "FCOS_18_depgraph_fpn_head_60pct": "fcos18_depgraph_fpn_head_60pct",
+    "structural_fcos18_depgraph_fpn_head_60pct": "fcos18_depgraph_fpn_head_60pct",
     "fcos_x50": "fcos_x50",
     "FCOS_x50": "fcos_x50",
     "fcos_x101": "fcos_x101",
@@ -43,6 +46,8 @@ RESNET_ARCH = {
     "fcos_x50": "resnext50_32x4d",
     "fcos_x101": "resnext101_32x8d",
 }
+
+STRUCTURAL_ARCH = {"fcos18_depgraph_fpn_head_60pct"}
 
 
 def canonical_architecture(name: str) -> str:
@@ -134,7 +139,11 @@ def make_mobilenet_fcos(spec: ModelSpec, variant: str) -> FCOS:
 
 def create_model(spec: ModelSpec) -> nn.Module:
     arch = canonical_architecture(spec.architecture)
-    if arch in RESNET_ARCH:
+    if arch in STRUCTURAL_ARCH:
+        if not spec.checkpoint:
+            raise ValueError(f"Structural architecture '{spec.architecture}' requires spec.checkpoint.")
+        model = load_structural_model_object(Path(spec.checkpoint))
+    elif arch in RESNET_ARCH:
         model = make_resnet_fcos(spec)
     elif arch == "fcos_mobilenetv3_small_fpn":
         model = make_mobilenet_fcos(spec, "small")
@@ -142,9 +151,34 @@ def create_model(spec: ModelSpec) -> nn.Module:
         model = make_mobilenet_fcos(spec, "large")
     else:
         raise ValueError(f"Unsupported architecture: {spec.architecture}")
-    if spec.checkpoint:
+    if spec.checkpoint and arch not in STRUCTURAL_ARCH:
         load_checkpoint(model, Path(spec.checkpoint))
     return model
+
+
+def _ensure_guide_repo_on_path() -> None:
+    if GUIDE_REPO.is_dir() and str(GUIDE_REPO) not in sys.path:
+        sys.path.insert(0, str(GUIDE_REPO))
+
+
+def _unwrap_detection_model(model: nn.Module) -> nn.Module:
+    inner = getattr(model, "model", None)
+    if isinstance(inner, nn.Module):
+        return inner
+    return model
+
+
+def load_structural_model_object(checkpoint_path: Path) -> nn.Module:
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(f"Structural checkpoint not found: {checkpoint_path}")
+    _ensure_guide_repo_on_path()
+    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    if isinstance(checkpoint, dict) and isinstance(checkpoint.get("model_object"), nn.Module):
+        return _unwrap_detection_model(checkpoint["model_object"])
+    raise ValueError(
+        f"Structural checkpoint {checkpoint_path} does not contain a pickled model_object. "
+        "A state_dict-only artifact cannot recreate physically pruned channel topology."
+    )
 
 
 def _state_dict_from_checkpoint(checkpoint: Any) -> dict[str, torch.Tensor]:
@@ -185,4 +219,3 @@ def freeze_model(model: nn.Module) -> None:
 
 def count_parameters(model: nn.Module) -> int:
     return int(sum(p.numel() for p in model.parameters()))
-

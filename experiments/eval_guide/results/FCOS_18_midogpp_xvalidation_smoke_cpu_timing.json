@@ -9,51 +9,92 @@
   "num_workers": 0,
   "overlap": 0.3,
   "nms_thresh": 0.3,
-  "total_end_to_end_s": 158.5308323979998,
-  "startup_time_s": 0.32985537600006865,
+  "total_end_to_end_s": 173.13208341900008,
+  "startup_time_s": 0.3333316130001549,
   "startup_stages_s": {
-    "dataset_loading": 0.0009997859997383785,
-    "config_loading": 0.0008177480003723758,
-    "model_loading": 0.3278479129999141,
-    "inference_setup": 0.00018992900004377589
+    "dataset_loading": 0.0011954150004385156,
+    "dataset_box_conversion": 0.0009175139998660597,
+    "config_loading": 0.0008269330000985065,
+    "model_loading": 0.3301179499999307,
+    "runtime_backend_setup": 2.3300000066228677e-05,
+    "inference_setup": 0.00025050099975487683
   },
-  "measured_inference_time_s": 158.15610543300045,
-  "evaluation_metrics_s": 0.03100476700001309,
-  "output_serialization_s": 0.002641695999955118,
+  "measured_inference_time_s": 170.9654080309997,
+  "evaluation_metrics_s": 0.04211061400019389,
+  "output_serialization_s": 0.0006174730001475837,
   "stages": {
     "dataloader_wait_preprocessing": {
-      "total_s": 0.8487599969944313,
-      "percent_of_measured_inference": 0.5366596469170081
+      "total_s": 0.8958463040021343,
+      "percent_of_measured_inference": 0.5239927271367657
     },
     "forward_pass": {
-      "total_s": 157.14232308499868,
-      "percent_of_measured_inference": 99.35899891741376
+      "total_s": 169.38669021000078,
+      "percent_of_measured_inference": 99.07658640471138
     },
     "image_io_patch_extraction_setup": {
-      "total_s": 0.13740380700028254,
-      "percent_of_measured_inference": 0.08687859796755733
+      "total_s": 0.6512376219993712,
+      "percent_of_measured_inference": 0.38091777131973265
     },
     "model_device_setup": {
-      "total_s": 0.0031228170000758837,
-      "percent_of_measured_inference": 0.0019745156164071077
+      "total_s": 0.0035143920003974927,
+      "percent_of_measured_inference": 0.0020556158353157955
     },
     "patch_merging_postprocessing_nms": {
-      "total_s": 0.019982863999757683,
-      "percent_of_measured_inference": 0.012634898883636843
+      "total_s": 0.024030786999901466,
+      "percent_of_measured_inference": 0.014055935219096583
     }
   },
   "per_image_s": [
-    54.28236783700004,
-    52.10044154900015,
-    51.77329604700026
+    57.359988579999936,
+    56.75491417600006,
+    56.850505274999705
   ],
   "patches_per_image": [
     88,
     88,
     88
   ],
-  "mean_per_image_s": 52.71870181100015,
-  "median_per_image_s": 52.10044154900015,
-  "mean_per_patch_s": 0.5990761569431835,
-  "median_per_patch_s": 0.592050472147729
+  "mean_per_image_s": 56.988469343666566,
+  "median_per_image_s": 56.850505274999705,
+  "mean_per_patch_s": 0.6475962425416655,
+  "median_per_patch_s": 0.6460284690340875,
+  "runtime_backend": "pytorch_eager",
+  "effective_runtime_backend": "pytorch_eager",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": null,
+  "onnx_model_path": null,
+  "openvino_device": null,
+  "export_path": null,
+  "export_reused": null,
+  "execution_providers": null,
+  "validation_path": null,
+  "validation_status": null,
+  "onnx_export_method": null,
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [],
+  "runtime_warnings": [],
+  "model_name": "FCOS_18",
+  "pruned_model_path": null,
+  "pruned_model_loaded": false,
+  "total_runtime_s": 173.13191153800017,
+  "pipeline_timing_enabled": true
 }

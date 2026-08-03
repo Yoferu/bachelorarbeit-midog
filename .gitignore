@@ -13,6 +13,9 @@ __pycache__/
 data/
 repos/
 
+# Experiments that store too much data
+experiments/distillation/
+
 # OS/editor noise
 .DS_Store
 Thumbs.db

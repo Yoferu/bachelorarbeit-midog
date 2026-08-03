@@ -1,0 +1,103 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "num_images": 3,
+  "num_patches": 228,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 217.3805409710003,
+  "startup_time_s": 0.27179187900037505,
+  "startup_stages_s": {
+    "dataset_loading": 0.0011006380009348504,
+    "dataset_box_conversion": 0.0009098740010813344,
+    "config_loading": 0.0007214969991764519,
+    "model_loading": 0.24505930899977102,
+    "pruned_model_loading": 0.02374508600041736,
+    "runtime_backend_setup": 3.485100023681298e-05,
+    "inference_setup": 0.00022062399875721894
+  },
+  "measured_inference_time_s": 216.15973342599682,
+  "evaluation_metrics_s": 0.04874594099965179,
+  "output_serialization_s": 0.00014468200242845342,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 0.8582327630028885,
+      "percent_of_measured_inference": 0.39703637185355245
+    },
+    "forward_pass": {
+      "total_s": 215.15223516199694,
+      "percent_of_measured_inference": 99.53391029493253
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.09461167200061027,
+      "percent_of_measured_inference": 0.043769332290096004
+    },
+    "model_device_setup": {
+      "total_s": 0.0032745359967520926,
+      "percent_of_measured_inference": 0.0015148686320309252
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.04611572200519731,
+      "percent_of_measured_inference": 0.02133409459490531
+    }
+  },
+  "per_image_s": [
+    66.20224787700135,
+    83.724103190998,
+    66.23338235799747
+  ],
+  "patches_per_image": [
+    70,
+    88,
+    70
+  ],
+  "mean_per_image_s": 72.05324447533228,
+  "median_per_image_s": 66.23338235799747,
+  "mean_per_patch_s": 0.948069006254372,
+  "median_per_patch_s": 0.946191176542821,
+  "runtime_backend": "pytorch_eager",
+  "effective_runtime_backend": "pytorch_eager",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": null,
+  "onnx_model_path": null,
+  "openvino_device": null,
+  "export_path": null,
+  "export_reused": null,
+  "execution_providers": null,
+  "validation_path": null,
+  "validation_status": null,
+  "onnx_export_method": null,
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [],
+  "runtime_warnings": [],
+  "model_name": "FCOS_18",
+  "pruned_model_path": "experiments/pruning/models/FCOS_18_depgraph_fpn_head_60pct.pt",
+  "pruned_model_loaded": true,
+  "model_artifact_load_method": "model_object",
+  "model_artifact_source": "model_object fallback (Could not resolve student architecture for checkpoint experiments/pruning/models/FCOS_18_depgraph_fpn_head_60pct.pt. Checked experiments/pruning/models/metadata.json, experiments/pruning/models/resolved_config.yaml, and checkpoint metadata. Add 'student_architecture' to metadata.json or 'student.architecture' to resolved_config.yaml.)",
+  "total_runtime_s": 217.3804103620023,
+  "pipeline_timing_enabled": true
+}

@@ -35,11 +35,28 @@ def create_run_dir(base_dir: Path, experiment_name: str, overwrite: bool) -> Pat
 def append_training_log(path: Path, row: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     exists = path.exists()
+    fieldnames = list(row.keys())
+    if exists:
+        with path.open(newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            existing_fieldnames = list(reader.fieldnames or [])
+            if existing_fieldnames:
+                missing = [field for field in fieldnames if field not in existing_fieldnames]
+                if missing:
+                    rows = list(reader)
+                    fieldnames = existing_fieldnames + missing
+                    rows.append({key: row.get(key, "") for key in fieldnames})
+                    with path.open("w", newline="", encoding="utf-8") as rewrite_handle:
+                        writer = csv.DictWriter(rewrite_handle, fieldnames=fieldnames)
+                        writer.writeheader()
+                        writer.writerows(rows)
+                    return
+                fieldnames = existing_fieldnames
     with path.open("a", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(row.keys()))
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
         if not exists:
             writer.writeheader()
-        writer.writerow(row)
+        writer.writerow({key: row.get(key, "") for key in fieldnames})
 
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -63,4 +80,3 @@ def package_versions() -> dict[str, str | None]:
     except Exception:
         versions["torchvision"] = None
     return versions
-

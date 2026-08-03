@@ -27,6 +27,9 @@ class ModelSpec:
 class DataConfig:
     train_csv: str
     val_csv: str | None = None
+    calibration_csv: str | None = None
+    final_csv: str | None = None
+    final_split: str = "test"
     image_root: str = "data/midogpp"
     dataset_type: str = "midog_guide"
     box_format: str = "cxcy"
@@ -48,6 +51,53 @@ class TrainingConfig:
     seed: int = 123
     device: str = "auto"
     max_batches_per_epoch: int | None = None
+    optimizer: str = "AdamW"
+    deterministic: bool = False
+    gradient_clip_val: float | None = 1.0
+    gradient_accumulation_steps: int = 1
+    freeze_backbone: bool = False
+    early_stopping: "EarlyStoppingConfig" = field(default_factory=lambda: EarlyStoppingConfig())
+    aggressive_lr_safety_stop: "AggressiveLRSafetyStopConfig" = field(default_factory=lambda: AggressiveLRSafetyStopConfig())
+    numerical_safety: "NumericalSafetyConfig" = field(default_factory=lambda: NumericalSafetyConfig())
+
+
+@dataclass
+class EarlyStoppingConfig:
+    enabled: bool = False
+    metric: str = "validation_ap"
+    mode: str = "max"
+    min_epochs: int = 1
+    patience_evaluations: int = 5
+    min_delta: float = 0.0001
+    validation_interval_steps: int = 50
+    restore_best_checkpoint: bool = False
+    validation_device: str = "cuda"
+    validation_batch_size: int = 1
+    validation_num_workers: int = 4
+    validation_det_thresh: float = 0.584
+    validation_nms_thresh: float = 0.3
+    validation_overlap: float = 0.3
+    validation_config_file: str = "experiments/eval_guide/configs/FCOS_18_eval.yaml"
+    validation_adapter: str = "src/benchmark/midog_guide_adapter.py"
+    validation_split: str = "val"
+
+
+@dataclass
+class AggressiveLRSafetyStopConfig:
+    enabled: bool = False
+    label: str = "aggressive_lr_safety_stop"
+    max_epoch_fraction: float = 1.0
+    baseline_step: int = 0
+    min_post_baseline_validations: int = 5
+    min_delta: float = 0.0001
+    degradation_margin: float = 0.0005
+    trend_window: int = 5
+
+
+@dataclass
+class NumericalSafetyConfig:
+    enabled: bool = True
+    max_gradient_norm: float = 1000.0
 
 
 @dataclass
@@ -67,13 +117,15 @@ class LoggingConfig:
     save_every: int = 1
     evaluate_every: int = 0
     log_interval: int = 10
+    save_every_steps: int | None = None
+    checkpoint_steps: list[int] = field(default_factory=list)
 
 
 @dataclass
 class DistillationConfig:
     experiment_name: str
     output_dir: str
-    teacher: ModelSpec
+    teacher: ModelSpec | None
     student: ModelSpec
     data: DataConfig
     training: TrainingConfig = field(default_factory=TrainingConfig)
@@ -87,13 +139,22 @@ class DistillationConfig:
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> "DistillationConfig":
+        training_raw = dict(raw.get("training", {}))
+        if isinstance(training_raw.get("early_stopping"), dict):
+            training_raw["early_stopping"] = EarlyStoppingConfig(**training_raw["early_stopping"])
+        if isinstance(training_raw.get("aggressive_lr_safety_stop"), dict):
+            training_raw["aggressive_lr_safety_stop"] = AggressiveLRSafetyStopConfig(
+                **training_raw["aggressive_lr_safety_stop"]
+            )
+        if isinstance(training_raw.get("numerical_safety"), dict):
+            training_raw["numerical_safety"] = NumericalSafetyConfig(**training_raw["numerical_safety"])
         return cls(
             experiment_name=raw["experiment_name"],
             output_dir=raw["output_dir"],
-            teacher=ModelSpec(**raw["teacher"]),
+            teacher=ModelSpec(**raw["teacher"]) if raw.get("teacher") is not None else None,
             student=ModelSpec(**raw["student"]),
             data=DataConfig(**raw["data"]),
-            training=TrainingConfig(**raw.get("training", {})),
+            training=TrainingConfig(**training_raw),
             distillation=DistillationLossConfig(**raw.get("distillation", {})),
             logging=LoggingConfig(**raw.get("logging", {})),
         )
@@ -103,4 +164,3 @@ class DistillationConfig:
 
     def save_yaml(self, path: Path) -> None:
         path.write_text(yaml.safe_dump(self.as_dict(), sort_keys=False), encoding="utf-8")
-

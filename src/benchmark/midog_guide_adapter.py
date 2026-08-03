@@ -5,18 +5,22 @@ import pprint
 import sys
 import time
 from pathlib import Path
+import json
 
+import numpy as np
 import pandas as pd
+import torch
 from tqdm.autonotebook import tqdm
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.benchmark.benchmark_config import BenchmarkConfig
+from src.benchmark.distilled_model_loader import load_distilled_student
 from src.benchmark.pipeline_timing import build_timing_summary, instrument_guide_inference
 from src.benchmark.result_writer import write_runtime_metadata, write_timing_outputs
 from src.benchmark.runtime_backends import RuntimeBackendUnavailable, configure_runtime_backend
-from src.pruning.save_pruned_model import load_pruned_state_dict
+from src.pruning.save_pruned_model import load_pruned_model_object, load_pruned_state_dict
 
 
 RUNTIME_BACKENDS = ("pytorch_eager", "pytorch_compile", "onnxruntime_cpu", "openvino_cpu", "tensorrt")
@@ -42,6 +46,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--config_file", type=Path, required=True)
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--det_thresh", type=float, default=None)
     parser.add_argument("--export_dir", type=Path, default=None)
     parser.add_argument("--guide_repo", type=Path, default=Path("repos/MIDOG_2025_Guide"))
     parser.add_argument("--img_dir", type=Path, required=True)
@@ -59,6 +64,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--overlap", type=float, default=0.3)
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--profile_pipeline", action="store_true")
+    parser.add_argument("--predictions_output", type=Path, default=None)
     parser.add_argument("--pruned_model_path", type=Path, default=os.environ.get("PRUNED_MODEL_PATH"))
     parser.add_argument(
         "--runtime_backend",
@@ -106,10 +112,58 @@ def _build_runtime_example_input(
     return patch
 
 
+def _prediction_count_at_threshold(preds: dict, det_thresh: float) -> int:
+    total = 0
+    for case_preds in preds.values():
+        scores = case_preds.get("scores", [])
+        total += int(sum(float(score) > det_thresh for score in scores))
+    return total
+
+
+def _jsonable(value):
+    if torch.is_tensor(value):
+        detached = value.detach().cpu()
+        return detached.item() if detached.ndim == 0 else detached.tolist()
+    if isinstance(value, np.ndarray):
+        return value.item() if value.ndim == 0 else value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, dict):
+        return {str(k): _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
+    return value
+
+
+def _load_model_artifact(path: Path, guide_model):
+    try:
+        registry_model, source = load_distilled_student(path)
+        return registry_model, source, "registry"
+    except (ValueError, RuntimeError) as registry_error:
+        model_object = load_pruned_model_object(path)
+        if model_object is not None:
+            return model_object, f"model_object fallback ({registry_error})", "model_object"
+        state_dict = load_pruned_state_dict(path)
+        missing, unexpected = guide_model.load_state_dict(state_dict, strict=False)
+        if missing or unexpected:
+            raise RuntimeError(
+                f"Could not resolve an architecture for model artifact {path}: {registry_error} "
+                "The legacy state_dict also did not match the guide model. "
+                f"Missing keys: {list(missing)[:10]}, unexpected keys: {list(unexpected)[:10]}"
+            ) from registry_error
+        return guide_model, f"guide model state_dict fallback ({registry_error})", "guide_state_dict"
+
+
 def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> None:
     run_start = time.perf_counter()
     startup_times = {}
     runtime_warning_prefix = "Runtime warning:"
+    if config.device == "cpu":
+        torch.set_num_threads(int(os.environ.get("TORCH_NUM_THREADS", os.environ.get("OMP_NUM_THREADS", "4"))))
+        try:
+            torch.set_num_interop_threads(int(os.environ.get("TORCH_NUM_INTEROP_THREADS", "1")))
+        except RuntimeError:
+            pass
 
     guide_inference, MIDOGEvaluation, ConfigCreator, ModelFactory = _load_guide_modules(
         config.guide_repo,
@@ -153,13 +207,9 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         if not pruned_model_path.exists():
             raise FileNotFoundError(f"Could not find pruned model artifact: {pruned_model_path}")
         stage_start = time.perf_counter()
-        state_dict = load_pruned_state_dict(pruned_model_path)
-        missing, unexpected = model.load_state_dict(state_dict, strict=False)
-        if missing or unexpected:
-            raise RuntimeError(
-                "Pruned model state_dict did not match the loaded model. "
-                f"Missing keys: {list(missing)[:10]}, unexpected keys: {list(unexpected)[:10]}"
-            )
+        model, model_artifact_source, model_artifact_load_method = _load_model_artifact(
+            pruned_model_path, model
+        )
         pruned_model_loaded = True
         startup_times["pruned_model_loading"] = time.perf_counter() - stage_start
 
@@ -265,17 +315,28 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
 
         preds[filename] = results
 
+    if config.predictions_output:
+        config.predictions_output.parent.mkdir(parents=True, exist_ok=True)
+        config.predictions_output.write_text(json.dumps(_jsonable(preds)), encoding="utf-8")
+
     filtered_dataset = test_dataset.query("label == 1")
+    eval_det_thresh = model_config.det_thresh if config.det_thresh is None else float(config.det_thresh)
     evaluation = MIDOGEvaluation(
         gt_file=filtered_dataset,
         preds=preds,
         output_file=config.metrics_output or config.config_file.with_suffix(".json"),
-        det_thresh=model_config.det_thresh,
+        det_thresh=eval_det_thresh,
         split=config.split,
     )
 
     metrics_start = time.perf_counter()
     evaluation.score()
+    aggregate_metrics = evaluation._metrics["aggregates"]
+    case_metrics = evaluation._metrics["case"]
+    aggregate_metrics["true_positives"] = int(sum(case["tp"] for case in case_metrics.values()))
+    aggregate_metrics["false_positives"] = int(sum(case["fp"] for case in case_metrics.values()))
+    aggregate_metrics["false_negatives"] = int(sum(case["fn"] for case in case_metrics.values()))
+    aggregate_metrics["total_detections"] = _prediction_count_at_threshold(preds, eval_det_thresh)
     metrics_time = time.perf_counter() - metrics_start
 
     serialization_start = time.perf_counter()
@@ -292,13 +353,17 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         "model_name": model_config.model_name,
         "pruned_model_path": str(pruned_model_path) if pruned_model_path else None,
         "pruned_model_loaded": pruned_model_loaded,
+        "model_artifact_load_method": model_artifact_load_method if pruned_model_path else None,
+        "model_artifact_source": model_artifact_source if pruned_model_path else None,
         "config_file": str(config.config_file),
         "dataset_csv": str(config.dataset),
         "device": config.device,
+        "det_thresh": eval_det_thresh,
         "batch_size": config.batch_size,
         "num_workers": config.num_workers,
         "overlap": config.overlap,
         "nms_thresh": config.nms_thresh,
+        "num_images": int(len(filenames)),
         "total_runtime_s": total_end_to_end_s,
         "pipeline_timing_enabled": config.profile_pipeline,
     }

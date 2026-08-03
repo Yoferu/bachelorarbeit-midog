@@ -13,6 +13,7 @@ class BenchmarkConfig:
     compile_backend: str = "inductor"
     compile_mode: str | None = None
     device: str = "cuda"
+    det_thresh: float | None = None
     export_dir: Path | None = None
     metrics_output: Path | None = None
     nms_thresh: float = 0.3
@@ -23,6 +24,7 @@ class BenchmarkConfig:
     overlap: float = 0.3
     overwrite: bool = False
     profile_pipeline: bool = False
+    predictions_output: Path | None = None
     pruned_model_path: Path | None = None
     runtime_backend: str = "pytorch_eager"
     runtime_metadata_output: Path | None = None

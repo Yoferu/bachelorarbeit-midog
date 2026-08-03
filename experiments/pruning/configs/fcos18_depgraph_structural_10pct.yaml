@@ -1,0 +1,23 @@
+model: FCOS_18
+pruning_type: depgraph_magnitude_l2
+pruning_ratio: 0.10
+target_scope: backbone_fpn_head_convs
+pruning_mode: depgraph_structural
+excluded_modules:
+  - backbone.body.conv1
+  - head.classification_head.cls_logits
+  - head.regression_head.bbox_reg
+  - head.regression_head.bbox_ctrness
+device: cpu
+seed: 42
+guide_repo: repos/MIDOG_2025_Guide
+eval_config: experiments/eval_guide/configs/FCOS_18_eval.yaml
+example_input_size: 256
+round_to: 8
+global_pruning: false
+max_pruning_ratio: 0.20
+notes: >
+  Conservative DepGraph structural pruning experiment for FCOS_18. Torch-Pruning
+  physically removes Conv2d channels from dependency-safe backbone, FPN, and
+  internal detection-head convolutions while excluding fixed FCOS prediction
+  outputs for classification, box regression, and centerness.

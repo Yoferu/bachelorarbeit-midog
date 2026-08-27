@@ -23,7 +23,7 @@ from src.benchmark.runtime_backends import RuntimeBackendUnavailable, configure_
 from src.pruning.save_pruned_model import load_pruned_model_object, load_pruned_state_dict
 
 
-RUNTIME_BACKENDS = ("pytorch_eager", "pytorch_compile", "onnxruntime_cpu", "openvino_cpu", "tensorrt")
+RUNTIME_BACKENDS = ("pytorch_eager", "pytorch_compile", "onnxruntime_cpu", "onnxruntime_int8", "openvino_cpu", "openvino_int8", "tensorrt")
 
 
 def _parse_bool_flag(value: str | bool) -> bool:
@@ -50,6 +50,7 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--export_dir", type=Path, default=None)
     parser.add_argument("--guide_repo", type=Path, default=Path("repos/MIDOG_2025_Guide"))
     parser.add_argument("--img_dir", type=Path, required=True)
+    parser.add_argument("--int8_model_path", type=Path, default=None)
     parser.add_argument("--metrics_output", type=Path, default=None)
     parser.add_argument("--nms_thresh", type=float, default=0.3)
     parser.add_argument("--num_workers", type=int, default=8)
@@ -222,7 +223,9 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
     runtime_metadata_output = config.runtime_metadata_output or default_runtime_metadata
     validation_suffix = {
         "onnxruntime_cpu": "onnx_validation",
+        "onnxruntime_int8": "onnx_int8_validation",
         "openvino_cpu": "openvino_validation",
+        "openvino_int8": "openvino_int8_validation",
         "tensorrt": "tensorrt_validation",
     }.get(config.runtime_backend)
     validation_output = (
@@ -231,7 +234,7 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         else None
     )
     runtime_example_input = None
-    if config.runtime_backend in {"onnxruntime_cpu", "openvino_cpu", "tensorrt"} and len(filenames) > 0:
+    if config.runtime_backend in {"onnxruntime_cpu", "onnxruntime_int8", "openvino_cpu", "openvino_int8", "tensorrt"} and len(filenames) > 0:
         stage_start = time.perf_counter()
         runtime_example_input = _build_runtime_example_input(
             guide_inference=guide_inference,
@@ -258,6 +261,7 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
             config_file=config.config_file,
             validation_output=validation_output,
             example_input=runtime_example_input,
+            int8_model_path=config.int8_model_path,
         )
     except RuntimeBackendUnavailable as exc:
         print(f"{runtime_warning_prefix} {exc}")

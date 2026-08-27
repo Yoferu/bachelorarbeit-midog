@@ -19,6 +19,7 @@ class BenchmarkConfig:
     nms_thresh: float = 0.3
     num_workers: int = 8
     onnx_opset: int = 18
+    int8_model_path: Path | None = None
     openvino_device: str = "CPU"
     openvino_compress_to_fp16: bool = True
     overlap: float = 0.3

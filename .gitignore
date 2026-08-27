@@ -15,6 +15,10 @@ repos/
 
 # Experiments that store too much data
 experiments/distillation/
+experiments/quantization/
+experiments/combined_optimization/
+dist/
+
 
 # OS/editor noise
 .DS_Store

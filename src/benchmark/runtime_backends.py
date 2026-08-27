@@ -17,7 +17,9 @@ RuntimeBackendName = Literal[
     "pytorch_eager",
     "pytorch_compile",
     "onnxruntime_cpu",
+    "onnxruntime_int8",
     "openvino_cpu",
+    "openvino_int8",
     "tensorrt",
 ]
 
@@ -117,6 +119,7 @@ def configure_runtime_backend(
     validation_output: Path | None = None,
     example_input: Any | None = None,
     openvino_compress_to_fp16: bool = True,
+    int8_model_path: Path | None = None,
 ) -> RuntimeBackendResult:
     if runtime_backend == "pytorch_eager":
         return RuntimeBackendResult(
@@ -146,6 +149,15 @@ def configure_runtime_backend(
             example_input=example_input,
         )
 
+    if runtime_backend == "onnxruntime_int8":
+        return _configure_onnxruntime_int8(
+            model=model,
+            requested_backend=runtime_backend,
+            int8_model_path=int8_model_path,
+            validation_output=validation_output,
+            example_input=example_input,
+        )
+
     if runtime_backend == "openvino_cpu":
         return _configure_openvino_cpu(
             model=model,
@@ -157,6 +169,15 @@ def configure_runtime_backend(
             openvino_device=openvino_device,
             openvino_compress_to_fp16=openvino_compress_to_fp16,
             config_file=config_file,
+            validation_output=validation_output,
+            example_input=example_input,
+        )
+
+    if runtime_backend == "openvino_int8":
+        return _configure_openvino_int8(
+            requested_backend=runtime_backend,
+            int8_model_path=int8_model_path,
+            openvino_device=openvino_device,
             validation_output=validation_output,
             example_input=example_input,
         )
@@ -316,6 +337,106 @@ def _configure_onnxruntime_cpu(
     )
 
 
+def _configure_onnxruntime_int8(
+    *,
+    model: Any,
+    requested_backend: RuntimeBackendName,
+    int8_model_path: Path | None,
+    validation_output: Path | None,
+    example_input: Any | None,
+) -> RuntimeBackendResult:
+    _require_modules(
+        modules=["onnx", "onnxruntime"],
+        install_hint="python -m pip install -r requirements-runtime.txt",
+        backend_name=requested_backend,
+    )
+    if int8_model_path is None:
+        raise RuntimeBackendUnavailable("onnxruntime_int8 requires --int8_model_path; no FP32 fallback is allowed.")
+    int8_model_path = Path(int8_model_path).resolve()
+    if not int8_model_path.is_file():
+        raise RuntimeBackendUnavailable(f"INT8 ONNX artifact not found: {int8_model_path}")
+    if example_input is None:
+        raise RuntimeBackendUnavailable("A real smoke patch is required to validate the INT8 artifact.")
+
+    import numpy as np
+    import onnx
+    import onnxruntime as ort
+
+    graph = onnx.load(str(int8_model_path), load_external_data=False)
+    op_counts: dict[str, int] = {}
+    for node in graph.graph.node:
+        op_counts[node.op_type] = op_counts.get(node.op_type, 0) + 1
+    int8_initializers = sum(
+        initializer.data_type in {onnx.TensorProto.INT8, onnx.TensorProto.UINT8}
+        for initializer in graph.graph.initializer
+    )
+    qdq_count = op_counts.get("QuantizeLinear", 0) + op_counts.get("DequantizeLinear", 0)
+    qlinear_count = sum(count for op, count in op_counts.items() if op.startswith("QLinear"))
+    if int8_initializers == 0 or (qdq_count == 0 and qlinear_count == 0):
+        raise RuntimeBackendUnavailable(
+            f"Artifact is not a verified quantized graph: int8_initializers={int8_initializers}, "
+            f"Q/DQ nodes={qdq_count}, QLinear nodes={qlinear_count}"
+        )
+
+    session = ort.InferenceSession(str(int8_model_path), providers=["CPUExecutionProvider"])
+    providers = session.get_providers()
+    if providers != ["CPUExecutionProvider"]:
+        raise RuntimeBackendUnavailable(f"INT8 benchmark requires CPUExecutionProvider only; got {providers}")
+    output_roles = _infer_detection_output_roles(session)
+    sample = example_input.detach().cpu().float()
+    outputs = session.run(None, {session.get_inputs()[0].name: sample.numpy()})
+    output_summary = {}
+    for role, index in output_roles.items():
+        value = outputs[index]
+        output_summary[role] = {"shape": list(value.shape), "dtype": str(value.dtype), "finite": bool(np.isfinite(value).all())}
+        if not output_summary[role]["finite"]:
+            raise RuntimeBackendUnavailable(f"INT8 smoke output {role} contains non-finite values")
+    model.eval()
+    model.to("cpu")
+    with torch.inference_mode():
+        eager = model([sample])[0]
+    valid_shapes = (
+        len(output_summary["boxes"]["shape"]) == 2
+        and output_summary["boxes"]["shape"][1] == 4
+        and len(output_summary["scores"]["shape"]) == 1
+        and len(output_summary["labels"]["shape"]) == 1
+        and output_summary["boxes"]["shape"][0] == output_summary["scores"]["shape"][0]
+        and output_summary["scores"]["shape"][0] == output_summary["labels"]["shape"][0]
+    )
+    if not valid_shapes:
+        raise RuntimeBackendUnavailable(f"INT8 smoke returned an invalid detection structure: {output_summary}")
+
+    validation = {
+        "status": "passed",
+        "runtime_backend": "onnxruntime_int8",
+        "onnx_model_path": str(int8_model_path),
+        "execution_providers": providers,
+        "operator_counts": op_counts,
+        "int8_uint8_initializer_count": int8_initializers,
+        "qdq_node_count": qdq_count,
+        "qlinear_node_count": qlinear_count,
+        "outputs": output_summary,
+        "eager_detection_count": int(eager["scores"].numel()),
+        "int8_detection_count": int(outputs[output_roles["scores"]].size),
+    }
+    if validation_output:
+        validation_output.parent.mkdir(parents=True, exist_ok=True)
+        validation_output.write_text(json.dumps(validation, indent=2, sort_keys=True), encoding="utf-8")
+    return RuntimeBackendResult(
+        model=_OnnxRuntimeDetectionWrapper(
+            session=session, input_name=session.get_inputs()[0].name, output_roles=output_roles
+        ),
+        runtime_backend=requested_backend,
+        effective_runtime_backend="onnxruntime_int8",
+        export_path=int8_model_path,
+        execution_providers=providers,
+        validation_path=validation_output,
+        validation_status="passed",
+        precision="INT8",
+        runtime_limitations=["QDQ INT8 compute is executed by ONNX Runtime CPU EP; surrounding patch and MIDOG evaluation code remains FP32/Python."],
+    )
+
+
 def _prepare_onnx_export(
     *,
     model: Any,
@@ -376,6 +497,7 @@ def _configure_openvino_cpu(
         install_hint="python -m pip install -r requirements-runtime.txt",
         backend_name=requested_backend,
     )
+
 
     import onnxruntime as ort
     import openvino as ov
@@ -518,6 +640,89 @@ def _configure_openvino_cpu(
         openvino_compress_to_fp16=openvino_compress_to_fp16,
         runtime_limitations=limitations,
         runtime_warnings=warnings,
+    )
+
+
+def _configure_openvino_int8(
+    *, requested_backend: RuntimeBackendName, int8_model_path: Path | None,
+    openvino_device: str, validation_output: Path | None, example_input: Any | None,
+) -> RuntimeBackendResult:
+    _require_modules(modules=["openvino"], install_hint="python -m pip install openvino", backend_name=requested_backend)
+    if int8_model_path is None:
+        raise RuntimeBackendUnavailable("openvino_int8 requires --int8_model_path; no FP32 fallback is allowed.")
+    xml_path = Path(int8_model_path).resolve()
+    bin_path = xml_path.with_suffix(".bin")
+    if not xml_path.is_file() or not bin_path.is_file():
+        raise RuntimeBackendUnavailable(f"OpenVINO INT8 IR pair not found: {xml_path}, {bin_path}")
+    if example_input is None:
+        raise RuntimeBackendUnavailable("A real smoke patch is required to validate the OpenVINO INT8 artifact.")
+
+    import numpy as np
+    import openvino as ov
+
+    core = ov.Core()
+    available_devices = list(core.available_devices)
+    if openvino_device not in available_devices:
+        raise RuntimeBackendUnavailable(f"OpenVINO device {openvino_device!r} is unavailable: {available_devices}")
+    ov_model = core.read_model(str(xml_path))
+    op_counts: dict[str, int] = {}
+    element_type_counts: dict[str, int] = {}
+    for op in ov_model.get_ops():
+        op_counts[op.get_type_name()] = op_counts.get(op.get_type_name(), 0) + 1
+        for output in op.outputs():
+            dtype = str(output.get_element_type())
+            element_type_counts[dtype] = element_type_counts.get(dtype, 0) + 1
+    fake_quantize_count = op_counts.get("FakeQuantize", 0)
+    low_precision_types = sum(element_type_counts.get(name, 0) for name in ("i8", "u8"))
+    if fake_quantize_count == 0 and low_precision_types == 0:
+        raise RuntimeBackendUnavailable(
+            f"Artifact is not verified low precision: FakeQuantize={fake_quantize_count}, i8/u8={low_precision_types}"
+        )
+    compiled_model = core.compile_model(ov_model, openvino_device)
+    output_roles = _infer_openvino_detection_output_roles(compiled_model.outputs)
+    sample = example_input.detach().cpu().float().numpy()
+    result = compiled_model({compiled_model.inputs[0]: sample})
+    outputs = {}
+    for role, index in output_roles.items():
+        value = result[compiled_model.outputs[index]]
+        outputs[role] = {
+            "shape": list(value.shape), "dtype": str(value.dtype), "finite": bool(np.isfinite(value).all()),
+            "minimum": float(value.min()) if value.size else None, "maximum": float(value.max()) if value.size else None,
+        }
+        if not outputs[role]["finite"]:
+            raise RuntimeBackendUnavailable(f"OpenVINO INT8 smoke output {role} contains non-finite values")
+    scores_shape = outputs["scores"]["shape"]
+    if not (len(outputs["boxes"]["shape"]) == 2 and outputs["boxes"]["shape"][1] == 4
+            and len(scores_shape) == 1 and len(outputs["labels"]["shape"]) == 1
+            and outputs["boxes"]["shape"][0] == scores_shape[0] == outputs["labels"]["shape"][0]):
+        raise RuntimeBackendUnavailable(f"OpenVINO INT8 smoke returned an invalid detection structure: {outputs}")
+    try:
+        compiled_properties = {
+            "execution_devices": list(compiled_model.get_property("EXECUTION_DEVICES")),
+            "inference_num_threads": int(compiled_model.get_property("INFERENCE_NUM_THREADS")),
+            "num_streams": str(compiled_model.get_property("NUM_STREAMS")),
+        }
+    except Exception as exc:
+        compiled_properties = {"property_read_error": str(exc)}
+    validation = {
+        "status": "passed", "runtime_backend": "openvino_int8", "openvino_version": ov.__version__,
+        "openvino_model_path": str(xml_path), "openvino_weights_path": str(bin_path),
+        "available_devices": available_devices, "selected_device": openvino_device,
+        "operator_counts": op_counts, "element_type_counts": element_type_counts,
+        "fake_quantize_count": fake_quantize_count, "low_precision_output_count": low_precision_types,
+        "rt_info": {str(k): str(v) for k, v in ov_model.get_rt_info().items()},
+        "compiled_properties": compiled_properties, "outputs": outputs, "int8_detection_count": scores_shape[0],
+    }
+    if validation_output:
+        validation_output.parent.mkdir(parents=True, exist_ok=True)
+        validation_output.write_text(json.dumps(validation, indent=2, sort_keys=True), encoding="utf-8")
+    return RuntimeBackendResult(
+        model=_OpenVinoDetectionWrapper(compiled_model=compiled_model, input_obj=compiled_model.inputs[0], output_roles=output_roles),
+        runtime_backend=requested_backend, effective_runtime_backend="openvino_int8", openvino_device=openvino_device,
+        export_path=xml_path, validation_path=validation_output, validation_status="passed", openvino_version=ov.__version__,
+        available_devices=available_devices, selected_device=openvino_device, openvino_model_path=xml_path,
+        openvino_weights_path=bin_path, openvino_ir_reused=True, openvino_compress_to_fp16=False, precision="INT8",
+        runtime_limitations=["NNCF-quantized OpenVINO IR executes on OpenVINO CPU; preprocessing, merging, NMS, and metrics remain FP32/Python."],
     )
 
 

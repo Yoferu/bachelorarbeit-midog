@@ -1,278 +1,0 @@
-/home/johan/bachelorarbeit-midog/.venv/lib/python3.12/site-packages/torch/cuda/__init__.py:1061: UserWarning: Can't initialize NVML
-  raw_cnt = _raw_device_count_nvml()
-WARNING:root:Failed to create openvino_telemetry file. Please allow write access to the following directory: /home/johan
-WARNING:root:Could not create directory for storing client ID. No data will be sent.
-Loaded model configurations:
-FCOS_Config(model_name='FCOS_18',
-            detector='FCOS',
-            backbone='resnet18',
-            checkpoint='/home/johan/bachelorarbeit-midog/repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt',
-            det_thresh=0.584,
-            num_classes=2,
-            extra_blocks=False,
-            weights='IMAGENET1K_V1',
-            returned_layers=[1, 2, 3, 4],
-            patch_size=1024,
-            means=None,
-            stds=None)
-
-Runtime backend: openvino_int8
-Effective runtime backend: openvino_int8
-
-Running inference:   0%|          | 0/3 [00:00<?, ?it/s]
-Processing batches:   0%|          | 0/70 [00:00<?, ?it/s][A
-Processing batches:   1%|▏         | 1/70 [00:00<00:15,  4.53it/s][A
-Processing batches:   3%|▎         | 2/70 [00:00<00:14,  4.57it/s][A
-Processing batches:   4%|▍         | 3/70 [00:00<00:14,  4.63it/s][A
-Processing batches:   6%|▌         | 4/70 [00:00<00:14,  4.69it/s][A
-Processing batches:   7%|▋         | 5/70 [00:01<00:13,  4.73it/s][A
-Processing batches:   9%|▊         | 6/70 [00:01<00:13,  4.74it/s][A
-Processing batches:  10%|█         | 7/70 [00:01<00:13,  4.74it/s][A
-Processing batches:  11%|█▏        | 8/70 [00:01<00:13,  4.76it/s][A
-Processing batches:  13%|█▎        | 9/70 [00:01<00:12,  4.75it/s][A
-Processing batches:  14%|█▍        | 10/70 [00:02<00:12,  4.75it/s][A
-Processing batches:  16%|█▌        | 11/70 [00:02<00:12,  4.74it/s][A
-Processing batches:  17%|█▋        | 12/70 [00:02<00:12,  4.75it/s][A
-Processing batches:  19%|█▊        | 13/70 [00:02<00:12,  4.73it/s][A
-Processing batches:  20%|██        | 14/70 [00:02<00:11,  4.74it/s][A
-Processing batches:  21%|██▏       | 15/70 [00:03<00:11,  4.73it/s][A
-Processing batches:  23%|██▎       | 16/70 [00:03<00:11,  4.61it/s][A
-Processing batches:  24%|██▍       | 17/70 [00:03<00:11,  4.63it/s][A
-Processing batches:  26%|██▌       | 18/70 [00:03<00:11,  4.67it/s][A
-Processing batches:  27%|██▋       | 19/70 [00:04<00:10,  4.68it/s][A
-Processing batches:  29%|██▊       | 20/70 [00:04<00:10,  4.71it/s][A
-Processing batches:  30%|███       | 21/70 [00:04<00:10,  4.70it/s][A
-Processing batches:  31%|███▏      | 22/70 [00:04<00:10,  4.70it/s][A
-Processing batches:  33%|███▎      | 23/70 [00:04<00:10,  4.69it/s][A
-Processing batches:  34%|███▍      | 24/70 [00:05<00:09,  4.66it/s][A
-Processing batches:  36%|███▌      | 25/70 [00:05<00:10,  4.41it/s][A
-Processing batches:  37%|███▋      | 26/70 [00:05<00:09,  4.50it/s][A
-Processing batches:  39%|███▊      | 27/70 [00:05<00:09,  4.55it/s][A
-Processing batches:  40%|████      | 28/70 [00:06<00:09,  4.59it/s][A
-Processing batches:  41%|████▏     | 29/70 [00:06<00:08,  4.62it/s][A
-Processing batches:  43%|████▎     | 30/70 [00:06<00:08,  4.66it/s][A
-Processing batches:  44%|████▍     | 31/70 [00:06<00:08,  4.66it/s][A
-Processing batches:  46%|████▌     | 32/70 [00:06<00:08,  4.68it/s][A
-Processing batches:  47%|████▋     | 33/70 [00:07<00:07,  4.70it/s][A
-Processing batches:  49%|████▊     | 34/70 [00:07<00:07,  4.69it/s][A
-Processing batches:  50%|█████     | 35/70 [00:07<00:07,  4.69it/s][A
-Processing batches:  51%|█████▏    | 36/70 [00:07<00:07,  4.72it/s][A
-Processing batches:  53%|█████▎    | 37/70 [00:07<00:07,  4.71it/s][A
-Processing batches:  54%|█████▍    | 38/70 [00:08<00:06,  4.58it/s][A
-Processing batches:  56%|█████▌    | 39/70 [00:08<00:06,  4.64it/s][A
-Processing batches:  57%|█████▋    | 40/70 [00:08<00:06,  4.69it/s][A
-Processing batches:  59%|█████▊    | 41/70 [00:08<00:06,  4.70it/s][A
-Processing batches:  60%|██████    | 42/70 [00:08<00:05,  4.72it/s][A
-Processing batches:  61%|██████▏   | 43/70 [00:09<00:05,  4.72it/s][A
-Processing batches:  63%|██████▎   | 44/70 [00:09<00:05,  4.75it/s][A
-Processing batches:  64%|██████▍   | 45/70 [00:09<00:05,  4.72it/s][A
-Processing batches:  66%|██████▌   | 46/70 [00:09<00:05,  4.74it/s][A
-Processing batches:  67%|██████▋   | 47/70 [00:10<00:04,  4.76it/s][A
-Processing batches:  69%|██████▊   | 48/70 [00:10<00:04,  4.76it/s][A
-Processing batches:  70%|███████   | 49/70 [00:10<00:04,  4.75it/s][A
-Processing batches:  71%|███████▏  | 50/70 [00:10<00:04,  4.77it/s][A
-Processing batches:  73%|███████▎  | 51/70 [00:10<00:04,  4.74it/s][A
-Processing batches:  74%|███████▍  | 52/70 [00:11<00:03,  4.73it/s][A
-Processing batches:  76%|███████▌  | 53/70 [00:11<00:03,  4.74it/s][A
-Processing batches:  77%|███████▋  | 54/70 [00:11<00:03,  4.74it/s][A
-Processing batches:  79%|███████▊  | 55/70 [00:11<00:03,  4.50it/s][A
-Processing batches:  80%|████████  | 56/70 [00:11<00:03,  4.57it/s][A
-Processing batches:  81%|████████▏ | 57/70 [00:12<00:02,  4.63it/s][A
-Processing batches:  83%|████████▎ | 58/70 [00:12<00:02,  4.68it/s][A
-Processing batches:  84%|████████▍ | 59/70 [00:12<00:02,  4.69it/s][A
-Processing batches:  86%|████████▌ | 60/70 [00:12<00:02,  4.70it/s][A
-Processing batches:  87%|████████▋ | 61/70 [00:13<00:01,  4.70it/s][A
-Processing batches:  89%|████████▊ | 62/70 [00:13<00:01,  4.68it/s][A
-Processing batches:  90%|█████████ | 63/70 [00:13<00:01,  4.69it/s][A
-Processing batches:  91%|█████████▏| 64/70 [00:13<00:01,  4.69it/s][A
-Processing batches:  93%|█████████▎| 65/70 [00:13<00:01,  4.50it/s][A
-Processing batches:  94%|█████████▍| 66/70 [00:14<00:00,  4.57it/s][A
-Processing batches:  96%|█████████▌| 67/70 [00:14<00:00,  4.59it/s][A
-Processing batches:  97%|█████████▋| 68/70 [00:14<00:00,  4.64it/s][A
-Processing batches:  99%|█████████▊| 69/70 [00:14<00:00,  4.60it/s][A
-Processing batches: 100%|██████████| 70/70 [00:14<00:00,  4.64it/s][AProcessing batches: 100%|██████████| 70/70 [00:14<00:00,  4.67it/s]
-Running inference:  33%|███▎      | 1/3 [00:15<00:30, 15.02s/it]
-Processing batches:   0%|          | 0/88 [00:00<?, ?it/s][A
-Processing batches:   1%|          | 1/88 [00:00<00:18,  4.71it/s][A
-Processing batches:   2%|▏         | 2/88 [00:00<00:18,  4.54it/s][A
-Processing batches:   3%|▎         | 3/88 [00:00<00:18,  4.63it/s][A
-Processing batches:   5%|▍         | 4/88 [00:00<00:17,  4.69it/s][A
-Processing batches:   6%|▌         | 5/88 [00:01<00:17,  4.70it/s][A
-Processing batches:   7%|▋         | 6/88 [00:01<00:17,  4.69it/s][A
-Processing batches:   8%|▊         | 7/88 [00:01<00:17,  4.72it/s][A
-Processing batches:   9%|▉         | 8/88 [00:01<00:16,  4.72it/s][A
-Processing batches:  10%|█         | 9/88 [00:01<00:16,  4.74it/s][A
-Processing batches:  11%|█▏        | 10/88 [00:02<00:16,  4.75it/s][A
-Processing batches:  12%|█▎        | 11/88 [00:02<00:16,  4.70it/s][A
-Processing batches:  14%|█▎        | 12/88 [00:02<00:16,  4.73it/s][A
-Processing batches:  15%|█▍        | 13/88 [00:02<00:15,  4.75it/s][A
-Processing batches:  16%|█▌        | 14/88 [00:02<00:15,  4.75it/s][A
-Processing batches:  17%|█▋        | 15/88 [00:03<00:15,  4.72it/s][A
-Processing batches:  18%|█▊        | 16/88 [00:03<00:15,  4.69it/s][A
-Processing batches:  19%|█▉        | 17/88 [00:03<00:15,  4.70it/s][A
-Processing batches:  20%|██        | 18/88 [00:03<00:14,  4.72it/s][A
-Processing batches:  22%|██▏       | 19/88 [00:04<00:14,  4.73it/s][A
-Processing batches:  23%|██▎       | 20/88 [00:04<00:16,  4.23it/s][A
-Processing batches:  24%|██▍       | 21/88 [00:04<00:15,  4.36it/s][A
-Processing batches:  25%|██▌       | 22/88 [00:04<00:14,  4.46it/s][A
-Processing batches:  26%|██▌       | 23/88 [00:04<00:14,  4.40it/s][A
-Processing batches:  27%|██▋       | 24/88 [00:05<00:14,  4.49it/s][A
-Processing batches:  28%|██▊       | 25/88 [00:05<00:13,  4.56it/s][A
-Processing batches:  30%|██▉       | 26/88 [00:05<00:13,  4.63it/s][A
-Processing batches:  31%|███       | 27/88 [00:05<00:13,  4.66it/s][A
-Processing batches:  32%|███▏      | 28/88 [00:06<00:12,  4.67it/s][A
-Processing batches:  33%|███▎      | 29/88 [00:06<00:12,  4.66it/s][A
-Processing batches:  34%|███▍      | 30/88 [00:06<00:12,  4.62it/s][A
-Processing batches:  35%|███▌      | 31/88 [00:06<00:12,  4.59it/s][A
-Processing batches:  36%|███▋      | 32/88 [00:06<00:12,  4.64it/s][A
-Processing batches:  38%|███▊      | 33/88 [00:07<00:11,  4.65it/s][A
-Processing batches:  39%|███▊      | 34/88 [00:07<00:11,  4.70it/s][A
-Processing batches:  40%|███▉      | 35/88 [00:07<00:11,  4.70it/s][A
-Processing batches:  41%|████      | 36/88 [00:07<00:10,  4.73it/s][A
-Processing batches:  42%|████▏     | 37/88 [00:07<00:10,  4.74it/s][A
-Processing batches:  43%|████▎     | 38/88 [00:08<00:10,  4.68it/s][A
-Processing batches:  44%|████▍     | 39/88 [00:08<00:10,  4.61it/s][A
-Processing batches:  45%|████▌     | 40/88 [00:08<00:10,  4.65it/s][A
-Processing batches:  47%|████▋     | 41/88 [00:08<00:10,  4.64it/s][A
-Processing batches:  48%|████▊     | 42/88 [00:09<00:09,  4.66it/s][A
-Processing batches:  49%|████▉     | 43/88 [00:09<00:09,  4.58it/s][A
-Processing batches:  50%|█████     | 44/88 [00:09<00:09,  4.64it/s][A
-Processing batches:  51%|█████     | 45/88 [00:09<00:09,  4.67it/s][A
-Processing batches:  52%|█████▏    | 46/88 [00:09<00:08,  4.71it/s][A
-Processing batches:  53%|█████▎    | 47/88 [00:10<00:08,  4.73it/s][A
-Processing batches:  55%|█████▍    | 48/88 [00:10<00:08,  4.73it/s][A
-Processing batches:  56%|█████▌    | 49/88 [00:10<00:08,  4.72it/s][A
-Processing batches:  57%|█████▋    | 50/88 [00:10<00:08,  4.73it/s][A
-Processing batches:  58%|█████▊    | 51/88 [00:10<00:07,  4.72it/s][A
-Processing batches:  59%|█████▉    | 52/88 [00:11<00:07,  4.73it/s][A
-Processing batches:  60%|██████    | 53/88 [00:11<00:07,  4.72it/s][A
-Processing batches:  61%|██████▏   | 54/88 [00:11<00:07,  4.74it/s][A
-Processing batches:  62%|██████▎   | 55/88 [00:11<00:07,  4.71it/s][A
-Processing batches:  64%|██████▎   | 56/88 [00:12<00:06,  4.73it/s][A
-Processing batches:  65%|██████▍   | 57/88 [00:12<00:06,  4.64it/s][A
-Processing batches:  66%|██████▌   | 58/88 [00:12<00:06,  4.67it/s][A
-Processing batches:  67%|██████▋   | 59/88 [00:12<00:06,  4.69it/s][A
-Processing batches:  68%|██████▊   | 60/88 [00:12<00:06,  4.54it/s][A
-Processing batches:  69%|██████▉   | 61/88 [00:13<00:05,  4.59it/s][A
-Processing batches:  70%|███████   | 62/88 [00:13<00:05,  4.62it/s][A
-Processing batches:  72%|███████▏  | 63/88 [00:13<00:05,  4.61it/s][A
-Processing batches:  73%|███████▎  | 64/88 [00:13<00:05,  4.63it/s][A
-Processing batches:  74%|███████▍  | 65/88 [00:13<00:04,  4.65it/s][A
-Processing batches:  75%|███████▌  | 66/88 [00:14<00:04,  4.64it/s][A
-Processing batches:  76%|███████▌  | 67/88 [00:14<00:04,  4.63it/s][A
-Processing batches:  77%|███████▋  | 68/88 [00:14<00:04,  4.65it/s][A
-Processing batches:  78%|███████▊  | 69/88 [00:14<00:04,  4.68it/s][A
-Processing batches:  80%|███████▉  | 70/88 [00:15<00:03,  4.70it/s][A
-Processing batches:  81%|████████  | 71/88 [00:15<00:03,  4.69it/s][A
-Processing batches:  82%|████████▏ | 72/88 [00:15<00:03,  4.70it/s][A
-Processing batches:  83%|████████▎ | 73/88 [00:15<00:03,  4.71it/s][A
-Processing batches:  84%|████████▍ | 74/88 [00:15<00:02,  4.72it/s][A
-Processing batches:  85%|████████▌ | 75/88 [00:16<00:02,  4.72it/s][A
-Processing batches:  86%|████████▋ | 76/88 [00:16<00:02,  4.72it/s][A
-Processing batches:  88%|████████▊ | 77/88 [00:16<00:02,  4.72it/s][A
-Processing batches:  89%|████████▊ | 78/88 [00:16<00:02,  4.69it/s][A
-Processing batches:  90%|████████▉ | 79/88 [00:16<00:01,  4.71it/s][A
-Processing batches:  91%|█████████ | 80/88 [00:17<00:01,  4.72it/s][A
-Processing batches:  92%|█████████▏| 81/88 [00:17<00:01,  4.71it/s][A
-Processing batches:  93%|█████████▎| 82/88 [00:17<00:01,  4.75it/s][A
-Processing batches:  94%|█████████▍| 83/88 [00:17<00:01,  4.73it/s][A
-Processing batches:  95%|█████████▌| 84/88 [00:18<00:00,  4.74it/s][A
-Processing batches:  97%|█████████▋| 85/88 [00:18<00:00,  4.75it/s][A
-Processing batches:  98%|█████████▊| 86/88 [00:18<00:00,  4.64it/s][A
-Processing batches:  99%|█████████▉| 87/88 [00:18<00:00,  4.67it/s][A
-Processing batches: 100%|██████████| 88/88 [00:18<00:00,  4.70it/s][AProcessing batches: 100%|██████████| 88/88 [00:18<00:00,  4.67it/s]
-Running inference:  67%|██████▋   | 2/3 [00:33<00:17, 17.31s/it]
-Processing batches:   0%|          | 0/70 [00:00<?, ?it/s][A
-Processing batches:   1%|▏         | 1/70 [00:00<00:14,  4.78it/s][A
-Processing batches:   3%|▎         | 2/70 [00:00<00:14,  4.78it/s][A
-Processing batches:   4%|▍         | 3/70 [00:00<00:14,  4.71it/s][A
-Processing batches:   6%|▌         | 4/70 [00:00<00:14,  4.48it/s][A
-Processing batches:   7%|▋         | 5/70 [00:01<00:14,  4.58it/s][A
-Processing batches:   9%|▊         | 6/70 [00:01<00:13,  4.65it/s][A
-Processing batches:  10%|█         | 7/70 [00:01<00:13,  4.57it/s][A
-Processing batches:  11%|█▏        | 8/70 [00:01<00:13,  4.61it/s][A
-Processing batches:  13%|█▎        | 9/70 [00:01<00:13,  4.67it/s][A
-Processing batches:  14%|█▍        | 10/70 [00:02<00:12,  4.70it/s][A
-Processing batches:  16%|█▌        | 11/70 [00:02<00:12,  4.70it/s][A
-Processing batches:  17%|█▋        | 12/70 [00:02<00:12,  4.62it/s][A
-Processing batches:  19%|█▊        | 13/70 [00:02<00:12,  4.68it/s][A
-Processing batches:  20%|██        | 14/70 [00:03<00:11,  4.69it/s][A
-Processing batches:  21%|██▏       | 15/70 [00:03<00:11,  4.71it/s][A
-Processing batches:  23%|██▎       | 16/70 [00:03<00:11,  4.72it/s][A
-Processing batches:  24%|██▍       | 17/70 [00:03<00:11,  4.72it/s][A
-Processing batches:  26%|██▌       | 18/70 [00:03<00:11,  4.73it/s][A
-Processing batches:  27%|██▋       | 19/70 [00:04<00:10,  4.72it/s][A
-Processing batches:  29%|██▊       | 20/70 [00:04<00:10,  4.72it/s][A
-Processing batches:  30%|███       | 21/70 [00:04<00:10,  4.58it/s][A
-Processing batches:  31%|███▏      | 22/70 [00:04<00:10,  4.58it/s][A
-Processing batches:  33%|███▎      | 23/70 [00:04<00:10,  4.60it/s][A
-Processing batches:  34%|███▍      | 24/70 [00:05<00:09,  4.63it/s][A
-Processing batches:  36%|███▌      | 25/70 [00:05<00:09,  4.53it/s][A
-Processing batches:  37%|███▋      | 26/70 [00:05<00:09,  4.57it/s][A
-Processing batches:  39%|███▊      | 27/70 [00:05<00:09,  4.63it/s][A
-Processing batches:  40%|████      | 28/70 [00:06<00:08,  4.69it/s][A
-Processing batches:  41%|████▏     | 29/70 [00:06<00:08,  4.72it/s][A
-Processing batches:  43%|████▎     | 30/70 [00:06<00:08,  4.73it/s][A
-Processing batches:  44%|████▍     | 31/70 [00:06<00:08,  4.71it/s][A
-Processing batches:  46%|████▌     | 32/70 [00:06<00:08,  4.72it/s][A
-Processing batches:  47%|████▋     | 33/70 [00:07<00:07,  4.73it/s][A
-Processing batches:  49%|████▊     | 34/70 [00:07<00:07,  4.75it/s][A
-Processing batches:  50%|█████     | 35/70 [00:07<00:07,  4.75it/s][A
-Processing batches:  51%|█████▏    | 36/70 [00:07<00:07,  4.76it/s][A
-Processing batches:  53%|█████▎    | 37/70 [00:07<00:06,  4.76it/s][A
-Processing batches:  54%|█████▍    | 38/70 [00:08<00:06,  4.77it/s][A
-Processing batches:  56%|█████▌    | 39/70 [00:08<00:06,  4.78it/s][A
-Processing batches:  57%|█████▋    | 40/70 [00:08<00:06,  4.77it/s][A
-Processing batches:  59%|█████▊    | 41/70 [00:08<00:06,  4.78it/s][A
-Processing batches:  60%|██████    | 42/70 [00:08<00:05,  4.79it/s][A
-Processing batches:  61%|██████▏   | 43/70 [00:09<00:05,  4.78it/s][A
-Processing batches:  63%|██████▎   | 44/70 [00:09<00:05,  4.80it/s][A
-Processing batches:  64%|██████▍   | 45/70 [00:09<00:05,  4.74it/s][A
-Processing batches:  66%|██████▌   | 46/70 [00:09<00:05,  4.73it/s][A
-Processing batches:  67%|██████▋   | 47/70 [00:10<00:04,  4.74it/s][A
-Processing batches:  69%|██████▊   | 48/70 [00:10<00:04,  4.74it/s][A
-Processing batches:  70%|███████   | 49/70 [00:10<00:04,  4.74it/s][A
-Processing batches:  71%|███████▏  | 50/70 [00:10<00:04,  4.74it/s][A
-Processing batches:  73%|███████▎  | 51/70 [00:10<00:04,  4.71it/s][A
-Processing batches:  74%|███████▍  | 52/70 [00:11<00:03,  4.71it/s][A
-Processing batches:  76%|███████▌  | 53/70 [00:11<00:03,  4.72it/s][A
-Processing batches:  77%|███████▋  | 54/70 [00:11<00:03,  4.72it/s][A
-Processing batches:  79%|███████▊  | 55/70 [00:11<00:03,  4.69it/s][A
-Processing batches:  80%|████████  | 56/70 [00:11<00:02,  4.69it/s][A
-Processing batches:  81%|████████▏ | 57/70 [00:12<00:02,  4.68it/s][A
-Processing batches:  83%|████████▎ | 58/70 [00:12<00:02,  4.69it/s][A
-Processing batches:  84%|████████▍ | 59/70 [00:12<00:02,  4.70it/s][A
-Processing batches:  86%|████████▌ | 60/70 [00:12<00:02,  4.67it/s][A
-Processing batches:  87%|████████▋ | 61/70 [00:12<00:01,  4.66it/s][A
-Processing batches:  89%|████████▊ | 62/70 [00:13<00:01,  4.68it/s][A
-Processing batches:  90%|█████████ | 63/70 [00:13<00:01,  4.56it/s][A
-Processing batches:  91%|█████████▏| 64/70 [00:13<00:01,  4.62it/s][A
-Processing batches:  93%|█████████▎| 65/70 [00:13<00:01,  4.65it/s][A
-Processing batches:  94%|█████████▍| 66/70 [00:14<00:00,  4.70it/s][A
-Processing batches:  96%|█████████▌| 67/70 [00:14<00:00,  4.58it/s][A
-Processing batches:  97%|█████████▋| 68/70 [00:14<00:00,  4.64it/s][A
-Processing batches:  99%|█████████▊| 69/70 [00:14<00:00,  4.68it/s][A
-Processing batches: 100%|██████████| 70/70 [00:14<00:00,  4.66it/s][AProcessing batches: 100%|██████████| 70/70 [00:14<00:00,  4.69it/s]
-Running inference: 100%|██████████| 3/3 [00:48<00:00, 16.24s/it]Running inference: 100%|██████████| 3/3 [00:48<00:00, 16.30s/it]
-Evaluation done.
-Evaluation results for test split
-{'AP': 0.9330026507377625,
- 'f1_score': 0.8799999999999648,
- 'false_negatives': 2,
- 'false_positives': 1,
- 'precision': 0.9166666666665902,
- 'recall': 0.8461538461537811,
- 'total_detections': 12,
- 'true_positives': 11,
- 'tumor_caninesofttissuesarcoma_AP': 1.0,
- 'tumor_caninesofttissuesarcoma_f1': 0.9473684210525818,
- 'tumor_caninesofttissuesarcoma_precision': 0.89999999999991,
- 'tumor_caninesofttissuesarcoma_recall': 0.9999999999998889,
- 'tumor_humanneuroendocrinetumor_AP': 0.8514851331710815,
- 'tumor_humanneuroendocrinetumor_f1': 0.6666666666665555,
- 'tumor_humanneuroendocrinetumor_precision': 0.9999999999995,
- 'tumor_humanneuroendocrinetumor_recall': 0.499999999999875}
-Runtime metadata saved to: experiments/final_cpu_4physicalcore_rerun_20260906/diagnostic/pruned60_openvino_int8/rep1/runtime.json
-Timing JSON saved to: experiments/final_cpu_4physicalcore_rerun_20260906/diagnostic/pruned60_openvino_int8/rep1/timing.json
-Timing CSV saved to: experiments/final_cpu_4physicalcore_rerun_20260906/diagnostic/pruned60_openvino_int8/rep1/timing.csv
-End of script.

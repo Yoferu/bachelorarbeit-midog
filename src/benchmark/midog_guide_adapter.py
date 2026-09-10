@@ -56,6 +56,13 @@ def get_args() -> argparse.Namespace:
     parser.add_argument("--num_workers", type=int, default=8)
     parser.add_argument("--onnx_opset", type=int, default=18)
     parser.add_argument("--openvino_device", type=str, default="CPU")
+    parser.add_argument("--openvino_performance_hint", type=str, default="LATENCY")
+    parser.add_argument("--openvino_num_streams", type=int, default=1)
+    parser.add_argument("--runtime_intra_op_threads", type=int, default=0)
+    parser.add_argument("--runtime_inter_op_threads", type=int, default=1)
+    parser.add_argument("--openvino_inference_num_threads", type=int, default=4)
+    parser.add_argument("--openvino_inference_precision", type=str, default="f32")
+    parser.add_argument("--warmup_iterations", type=int, default=0)
     parser.add_argument(
         "--openvino_compress_to_fp16",
         type=_parse_bool_flag,
@@ -134,6 +141,50 @@ def _jsonable(value):
     if isinstance(value, (list, tuple)):
         return [_jsonable(v) for v in value]
     return value
+
+
+def _cpu_resource_metadata() -> dict:
+    affinity = sorted(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else []
+    core_ids = {}
+    for cpu in affinity:
+        topology_path = Path(f"/sys/devices/system/cpu/cpu{cpu}/topology/core_id")
+        try:
+            core_ids[str(cpu)] = int(topology_path.read_text(encoding="utf-8").strip())
+        except (OSError, ValueError):
+            core_ids[str(cpu)] = None
+    physical_core_ids = sorted({value for value in core_ids.values() if value is not None})
+    thread_affinities = {}
+    task_root = Path("/proc/self/task")
+    if task_root.is_dir():
+        for task_dir in task_root.iterdir():
+            try:
+                status = (task_dir / "status").read_text(encoding="utf-8")
+                allowed = next(
+                    line.split(":", 1)[1].strip()
+                    for line in status.splitlines()
+                    if line.startswith("Cpus_allowed_list:")
+                )
+                thread_affinities[task_dir.name] = allowed
+            except (OSError, StopIteration):
+                continue
+    return {
+        "process_affinity_logical_cpus": affinity,
+        "logical_cpu_to_physical_core": core_ids,
+        "effective_physical_core_ids": physical_core_ids,
+        "effective_physical_core_count": len(physical_core_ids) if physical_core_ids else None,
+        "thread_count_at_metadata_capture": len(thread_affinities),
+        "per_thread_allowed_cpu_lists": thread_affinities,
+        "unique_thread_allowed_cpu_lists": sorted(set(thread_affinities.values())),
+        "torch_num_threads": torch.get_num_threads(),
+        "torch_num_interop_threads": torch.get_num_interop_threads(),
+        "thread_environment": {
+            name: os.environ.get(name)
+            for name in (
+                "OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
+                "NUMEXPR_NUM_THREADS", "TORCH_NUM_THREADS", "TORCH_NUM_INTEROP_THREADS",
+            )
+        },
+    }
 
 
 def _load_model_artifact(path: Path, guide_model):
@@ -234,7 +285,10 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         else None
     )
     runtime_example_input = None
-    if config.runtime_backend in {"onnxruntime_cpu", "onnxruntime_int8", "openvino_cpu", "openvino_int8", "tensorrt"} and len(filenames) > 0:
+    if (
+        config.runtime_backend in {"onnxruntime_cpu", "onnxruntime_int8", "openvino_cpu", "openvino_int8", "tensorrt"}
+        or config.warmup_iterations > 0
+    ) and len(filenames) > 0:
         stage_start = time.perf_counter()
         runtime_example_input = _build_runtime_example_input(
             guide_inference=guide_inference,
@@ -255,6 +309,12 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
             onnx_opset=config.onnx_opset,
             openvino_device=config.openvino_device,
             openvino_compress_to_fp16=config.openvino_compress_to_fp16,
+            openvino_performance_hint=config.openvino_performance_hint,
+            openvino_num_streams=config.openvino_num_streams,
+            runtime_intra_op_threads=config.runtime_intra_op_threads,
+            runtime_inter_op_threads=config.runtime_inter_op_threads,
+            openvino_inference_num_threads=config.openvino_inference_num_threads,
+            openvino_inference_precision=config.openvino_inference_precision,
             export_dir=export_dir,
             model_name=model_config.model_name,
             patch_size=model_config.patch_size,
@@ -268,6 +328,14 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         raise SystemExit(2) from exc
     startup_times["runtime_backend_setup"] = time.perf_counter() - stage_start
     model = runtime_result.model
+
+    warmup_start = time.perf_counter()
+    if config.warmup_iterations and runtime_example_input is not None:
+        if hasattr(model, "eval"):
+            model.eval()
+        for _ in range(config.warmup_iterations):
+            model([runtime_example_input])
+    startup_times["warmup"] = time.perf_counter() - warmup_start
 
     stage_start = time.perf_counter()
     processor, patch_config = guide_inference.setup_inference(
@@ -370,6 +438,14 @@ def evaluate(config: BenchmarkConfig, logger: logging.Logger | None = None) -> N
         "num_images": int(len(filenames)),
         "total_runtime_s": total_end_to_end_s,
         "pipeline_timing_enabled": config.profile_pipeline,
+        "warmup_iterations": config.warmup_iterations,
+        "runtime_intra_op_threads": config.runtime_intra_op_threads,
+        "runtime_inter_op_threads": config.runtime_inter_op_threads,
+        "openvino_performance_hint": config.openvino_performance_hint,
+        "openvino_num_streams": config.openvino_num_streams,
+        "openvino_inference_num_threads": config.openvino_inference_num_threads,
+        "openvino_inference_precision": config.openvino_inference_precision,
+        "cpu_resources": _cpu_resource_metadata(),
     }
     write_runtime_metadata(runtime_metadata, runtime_metadata_output)
 

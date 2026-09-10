@@ -1,0 +1,145 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "num_images": 3,
+  "num_patches": 228,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 211.4776657760085,
+  "startup_time_s": 5.371958000017912,
+  "startup_stages_s": {
+    "dataset_loading": 0.0010683529981179163,
+    "dataset_box_conversion": 0.0009003320010378957,
+    "config_loading": 0.000685780993080698,
+    "model_loading": 0.2527582330076257,
+    "pruned_model_loading": 0.012526499995146878,
+    "runtime_validation_input": 0.030229481009882875,
+    "runtime_backend_setup": 4.1880004573613405e-05,
+    "warmup": 5.073482099003741,
+    "inference_setup": 0.00026534100470598787
+  },
+  "measured_inference_time_s": 205.1824351230025,
+  "evaluation_metrics_s": 0.043302828999003395,
+  "output_serialization_s": 0.0001422400091541931,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 0.7035062450013356,
+      "percent_of_measured_inference": 0.342868649833305
+    },
+    "forward_pass": {
+      "total_s": 204.35584411909804,
+      "percent_of_measured_inference": 99.5971433892921
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.07627410900022369,
+      "percent_of_measured_inference": 0.037173800454458485
+    },
+    "model_device_setup": {
+      "total_s": 0.0025294649822171777,
+      "percent_of_measured_inference": 0.0012327882650875147
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.04111893000663258,
+      "percent_of_measured_inference": 0.020040180331217267
+    }
+  },
+  "per_image_s": [
+    63.188107697002124,
+    78.8059673980024,
+    63.18836002799799
+  ],
+  "patches_per_image": [
+    70,
+    88,
+    70
+  ],
+  "mean_per_image_s": 68.39414504100084,
+  "median_per_image_s": 63.18836002799799,
+  "mean_per_patch_s": 0.8999229610658005,
+  "median_per_patch_s": 0.902687252814316,
+  "runtime_backend": "pytorch_eager",
+  "effective_runtime_backend": "pytorch_eager",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": null,
+  "onnx_model_path": null,
+  "openvino_device": null,
+  "export_path": null,
+  "export_reused": null,
+  "execution_providers": null,
+  "validation_path": null,
+  "validation_status": null,
+  "onnx_export_method": null,
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [],
+  "runtime_warnings": [],
+  "runtime_properties": null,
+  "model_name": "FCOS_18",
+  "pruned_model_path": "experiments/distillation/pruned60_frozen_backbone_recovery/runs/supervised_lr3e-5_seed42/student_stable_selected.pt",
+  "pruned_model_loaded": true,
+  "model_artifact_load_method": "registry",
+  "model_artifact_source": "checkpoint model_object",
+  "det_thresh": 0.584,
+  "total_runtime_s": 211.47737930499716,
+  "pipeline_timing_enabled": true,
+  "warmup_iterations": 5,
+  "runtime_intra_op_threads": 0,
+  "runtime_inter_op_threads": 1,
+  "openvino_performance_hint": "LATENCY",
+  "openvino_num_streams": 1,
+  "openvino_inference_num_threads": 4,
+  "openvino_inference_precision": "f32",
+  "cpu_resources": {
+    "process_affinity_logical_cpus": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "logical_cpu_to_physical_core": {
+      "0": 0,
+      "2": 1,
+      "4": 2,
+      "6": 3
+    },
+    "effective_physical_core_ids": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "effective_physical_core_count": 4,
+    "torch_num_threads": 4,
+    "torch_num_interop_threads": 1,
+    "thread_environment": {
+      "OMP_NUM_THREADS": "4",
+      "MKL_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "NUMEXPR_NUM_THREADS": "4",
+      "TORCH_NUM_THREADS": "4",
+      "TORCH_NUM_INTEROP_THREADS": "1"
+    }
+  }
+}

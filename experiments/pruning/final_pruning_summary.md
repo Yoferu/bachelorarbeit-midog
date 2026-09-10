@@ -1,4 +1,12 @@
-# Final FCOS_18 Structural Pruning Summary
+# FCOS_18 Structural Pruning Summary (quick selection; later backend finals exist)
+
+> **Scope/status correction (2026-09-03):** The quality and latency table below
+> is a non-final 32-image/2,486-patch quick evaluation. The eager-PyTorch full-run
+> commands in this document were not completed. Later full 111-image/8,500-patch
+> ORT and OpenVINO evaluations did complete; see
+> `reports/final_results_provenance.md`. Those later paths retain the historical
+> key `pruned_recovered`, but the evaluated model is Pruned60 selected at optimizer
+> step 0, before a meaningful recovery update.
 
 ## Status
 
@@ -52,7 +60,10 @@ Lightning baseline checkpoint, which contains additional training state.
 
 ## Full Evaluation
 
-Status: pending. Run the baseline and selected candidate in a CUDA-capable WSL
+Status: **not completed for eager PyTorch**. The commands below are retained as a
+historical plan; do not execute them merely to update documentation. Later ORT
+and OpenVINO final inference runs completed and are indexed separately. The
+original instruction was to run the baseline and selected candidate in a CUDA-capable WSL
 terminal. These paths are separate from all existing sweep outputs.
 
 ```bash
@@ -95,7 +106,9 @@ repeat measurement.
 
 ## Final CPU_4C_LIMITED Benchmark
 
-Status: pending. Run both commands under the same machine state. This benchmark
+Status: **not completed for eager PyTorch**. The commands remain for provenance.
+Later four-core ORT/OpenVINO full runs are the completed final backend benchmarks.
+The original plan was to run both commands under the same machine state. This benchmark
 also evaluates the full split so its metrics provide a CPU consistency check.
 
 ```bash

@@ -22,6 +22,13 @@ class BenchmarkConfig:
     int8_model_path: Path | None = None
     openvino_device: str = "CPU"
     openvino_compress_to_fp16: bool = True
+    openvino_performance_hint: str = "LATENCY"
+    openvino_num_streams: int = 1
+    runtime_intra_op_threads: int = 0
+    runtime_inter_op_threads: int = 1
+    openvino_inference_num_threads: int = 4
+    openvino_inference_precision: str = "f32"
+    warmup_iterations: int = 0
     overlap: float = 0.3
     overwrite: bool = False
     profile_pipeline: bool = False

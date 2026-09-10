@@ -1,0 +1,95 @@
+{
+  "provenance_correction": {
+    "legacy_variant_key": "pruned_recovered",
+    "display_name": "Pruned60 (step-0 recovery checkpoint)",
+    "recorded_input_path_note": "student_stable_selected.pt is retained as the historical execution path; final results do not demonstrate a meaningful recovery update."
+  },
+  "python": "3.12.3",
+  "platform": "Linux-5.15.167.4-microsoft-standard-WSL2-x86_64-with-glibc2.39",
+  "openvino": "2026.1.0",
+  "nncf": "3.2.0",
+  "onnxruntime": "1.26.0",
+  "cpu_affinity": "0-3",
+  "device": "CPU only",
+  "model_artifacts": [
+    {
+      "path": "experiments/quantization/ptq_20260816T1815Z/baseline/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+      "sha256": "bfb33fc437efcbd70127855177a5b864988eb37f3621096a2e928b7d8aa20a60",
+      "size_bytes": 74444978
+    },
+    {
+      "path": "experiments/quantization/ptq_20260816T1815Z/baseline/int8/FCOS_18_qdq_int8.onnx",
+      "sha256": "2275ae12466509ed5eaeea5fedaf3e702b84104e2e5210fea57718363a3aec2b",
+      "size_bytes": 19476233
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/fp32/FCOS_18_fp32.xml",
+      "sha256": "38f88baaa12a25049b7e54eec6d5355fa47fdbde63737af66696d8ba0709ad3b",
+      "size_bytes": 929355
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/fp32/FCOS_18_fp32.bin",
+      "sha256": "2d358d08dbdadcad1454f6d5af869436d038c64bef24e6c0de94ab1255180181",
+      "size_bytes": 74080364
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/int8/FCOS_18_int8.xml",
+      "sha256": "1ec0df449d507b582599f2a72f950634c382c146ab55184258065ba0c85f8ffc",
+      "size_bytes": 1382278
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/int8/FCOS_18_int8.bin",
+      "sha256": "d3e110921075d83f91c047c90a3e4b646a0ce05ebfaf6901468a27dc9cb675f4",
+      "size_bytes": 18597084
+    },
+    {
+      "path": "experiments/quantization/ptq_20260816T1815Z/pruned_recovered/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+      "sha256": "24c599e38a9772c9a51cc72fa603daf88dfab79b02372e9112fe7bfec60a7ab9",
+      "size_bytes": 62723586
+    },
+    {
+      "path": "experiments/quantization/ptq_20260816T1815Z/pruned_recovered/int8/FCOS_18_pruned60_recovered_qdq_int8.onnx",
+      "sha256": "42cf1fc0784ec65b871c15d9974bee190ff3791182ef891dc26dcf0f4a3c645e",
+      "size_bytes": 16466471
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/pruned_recovered/fp32/FCOS_18_pruned60_recovered_fp32.xml",
+      "sha256": "2c618e70f93b9ebdb0fb3312506fe8ece928d652b5ccf01a9f95d37ccb201fa1",
+      "size_bytes": 913252
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/pruned_recovered/fp32/FCOS_18_pruned60_recovered_fp32.bin",
+      "sha256": "0c52fb052166c873360d8930cbbe67866dc955c3b2df93d70f219a33d495d8f9",
+      "size_bytes": 62401644
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/pruned_recovered/int8/FCOS_18_pruned60_recovered_int8.xml",
+      "sha256": "731513a3182eec3db379c2a20c2576a55859a37eabd1c661a30585ec8bbc4d9c",
+      "size_bytes": 1361395
+    },
+    {
+      "path": "experiments/quantization/openvino_ptq_20260819T0000Z/pruned_recovered/int8/FCOS_18_pruned60_recovered_int8.bin",
+      "sha256": "6bcb87613181a25c890b547bd153ece8ad95b6d4f30661981ce701dde419880d",
+      "size_bytes": 15668444
+    },
+    {
+      "path": "experiments/distillation/pruned60_frozen_backbone_recovery/runs/supervised_lr3e-5_seed42/student_stable_selected.pt",
+      "sha256": "523fd01e0502dcddac0b58a135e4a66fdfb3d739eb6762695ad75df0cb096f54",
+      "size_bytes": 62572869
+    }
+  ],
+  "calibration_split": {
+    "images": 39,
+    "rows": 2289,
+    "positive_annotations": 968,
+    "patches_available_and_inference": 2922,
+    "ptq_subset_size": 300,
+    "nncf_transform_calls": 600
+  },
+  "final_test": {
+    "images": 111,
+    "annotations": 5383,
+    "patches": 8500
+  },
+  "calibration_test_overlap": []
+}

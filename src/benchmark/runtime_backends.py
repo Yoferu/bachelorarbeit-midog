@@ -60,6 +60,7 @@ class RuntimeBackendResult:
     inference_latency_excludes_engine_build: bool | None = None
     runtime_limitations: list[str] = field(default_factory=list)
     runtime_warnings: list[str] = field(default_factory=list)
+    runtime_properties: dict[str, Any] | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -97,6 +98,7 @@ class RuntimeBackendResult:
             "inference_latency_excludes_engine_build": self.inference_latency_excludes_engine_build,
             "runtime_limitations": self.runtime_limitations,
             "runtime_warnings": self.runtime_warnings,
+            "runtime_properties": self.runtime_properties,
         }
 
 
@@ -119,6 +121,12 @@ def configure_runtime_backend(
     validation_output: Path | None = None,
     example_input: Any | None = None,
     openvino_compress_to_fp16: bool = True,
+    openvino_performance_hint: str = "LATENCY",
+    openvino_num_streams: int = 1,
+    runtime_intra_op_threads: int = 0,
+    runtime_inter_op_threads: int = 1,
+    openvino_inference_num_threads: int = 4,
+    openvino_inference_precision: str = "f32",
     int8_model_path: Path | None = None,
 ) -> RuntimeBackendResult:
     if runtime_backend == "pytorch_eager":
@@ -147,6 +155,8 @@ def configure_runtime_backend(
             config_file=config_file,
             validation_output=validation_output,
             example_input=example_input,
+            intra_op_threads=runtime_intra_op_threads,
+            inter_op_threads=runtime_inter_op_threads,
         )
 
     if runtime_backend == "onnxruntime_int8":
@@ -156,6 +166,8 @@ def configure_runtime_backend(
             int8_model_path=int8_model_path,
             validation_output=validation_output,
             example_input=example_input,
+            intra_op_threads=runtime_intra_op_threads,
+            inter_op_threads=runtime_inter_op_threads,
         )
 
     if runtime_backend == "openvino_cpu":
@@ -168,6 +180,10 @@ def configure_runtime_backend(
             onnx_opset=onnx_opset,
             openvino_device=openvino_device,
             openvino_compress_to_fp16=openvino_compress_to_fp16,
+            performance_hint=openvino_performance_hint,
+            num_streams=openvino_num_streams,
+            inference_num_threads=openvino_inference_num_threads,
+            inference_precision=openvino_inference_precision,
             config_file=config_file,
             validation_output=validation_output,
             example_input=example_input,
@@ -180,6 +196,10 @@ def configure_runtime_backend(
             openvino_device=openvino_device,
             validation_output=validation_output,
             example_input=example_input,
+            performance_hint=openvino_performance_hint,
+            num_streams=openvino_num_streams,
+            inference_num_threads=openvino_inference_num_threads,
+            inference_precision=openvino_inference_precision,
         )
 
     if runtime_backend == "tensorrt":
@@ -224,6 +244,8 @@ def _configure_onnxruntime_cpu(
     config_file: Path | None,
     validation_output: Path | None,
     example_input: Any | None,
+    intra_op_threads: int,
+    inter_op_threads: int,
 ) -> RuntimeBackendResult:
     _require_modules(
         modules=["onnx", "onnxruntime"],
@@ -279,7 +301,13 @@ def _configure_onnxruntime_cpu(
         raise RuntimeBackendUnavailable(f"ONNX checker rejected {export_path}: {exc}") from exc
 
     try:
-        session = ort.InferenceSession(str(export_path), providers=["CPUExecutionProvider"])
+        session_options = ort.SessionOptions()
+        session_options.intra_op_num_threads = intra_op_threads
+        session_options.inter_op_num_threads = inter_op_threads
+        session_options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+        session = ort.InferenceSession(
+            str(export_path), sess_options=session_options, providers=["CPUExecutionProvider"]
+        )
     except Exception as exc:
         raise RuntimeBackendUnavailable(f"Could not create ONNX Runtime CPU session for {export_path}: {exc}") from exc
 
@@ -334,6 +362,11 @@ def _configure_onnxruntime_cpu(
         onnx_export_method=export_method,
         runtime_limitations=limitations,
         runtime_warnings=warnings,
+        runtime_properties={
+            "intra_op_num_threads": session.get_session_options().intra_op_num_threads,
+            "inter_op_num_threads": session.get_session_options().inter_op_num_threads,
+            "execution_mode": str(session.get_session_options().execution_mode),
+        },
     )
 
 
@@ -344,6 +377,8 @@ def _configure_onnxruntime_int8(
     int8_model_path: Path | None,
     validation_output: Path | None,
     example_input: Any | None,
+    intra_op_threads: int,
+    inter_op_threads: int,
 ) -> RuntimeBackendResult:
     _require_modules(
         modules=["onnx", "onnxruntime"],
@@ -378,7 +413,13 @@ def _configure_onnxruntime_int8(
             f"Q/DQ nodes={qdq_count}, QLinear nodes={qlinear_count}"
         )
 
-    session = ort.InferenceSession(str(int8_model_path), providers=["CPUExecutionProvider"])
+    session_options = ort.SessionOptions()
+    session_options.intra_op_num_threads = intra_op_threads
+    session_options.inter_op_num_threads = inter_op_threads
+    session_options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+    session = ort.InferenceSession(
+        str(int8_model_path), sess_options=session_options, providers=["CPUExecutionProvider"]
+    )
     providers = session.get_providers()
     if providers != ["CPUExecutionProvider"]:
         raise RuntimeBackendUnavailable(f"INT8 benchmark requires CPUExecutionProvider only; got {providers}")
@@ -434,6 +475,11 @@ def _configure_onnxruntime_int8(
         validation_status="passed",
         precision="INT8",
         runtime_limitations=["QDQ INT8 compute is executed by ONNX Runtime CPU EP; surrounding patch and MIDOG evaluation code remains FP32/Python."],
+        runtime_properties={
+            "intra_op_num_threads": session.get_session_options().intra_op_num_threads,
+            "inter_op_num_threads": session.get_session_options().inter_op_num_threads,
+            "execution_mode": str(session.get_session_options().execution_mode),
+        },
     )
 
 
@@ -491,6 +537,10 @@ def _configure_openvino_cpu(
     config_file: Path | None,
     validation_output: Path | None,
     example_input: Any | None,
+    performance_hint: str,
+    num_streams: int,
+    inference_num_threads: int,
+    inference_precision: str,
 ) -> RuntimeBackendResult:
     _require_modules(
         modules=["onnx", "onnxruntime", "openvino"],
@@ -567,7 +617,13 @@ def _configure_openvino_cpu(
         ) from exc
 
     try:
-        compiled_model = core.compile_model(ov_model, openvino_device)
+        compile_config = {
+            "PERFORMANCE_HINT": performance_hint,
+            "NUM_STREAMS": num_streams,
+            "INFERENCE_NUM_THREADS": inference_num_threads,
+            "INFERENCE_PRECISION_HINT": inference_precision,
+        }
+        compiled_model = core.compile_model(ov_model, openvino_device, compile_config)
     except Exception as exc:
         raise RuntimeBackendUnavailable(
             f"OpenVINO failed to compile {xml_path} for {openvino_device}: {exc}"
@@ -640,12 +696,15 @@ def _configure_openvino_cpu(
         openvino_compress_to_fp16=openvino_compress_to_fp16,
         runtime_limitations=limitations,
         runtime_warnings=warnings,
+        runtime_properties=_openvino_compiled_properties(compiled_model),
     )
 
 
 def _configure_openvino_int8(
     *, requested_backend: RuntimeBackendName, int8_model_path: Path | None,
     openvino_device: str, validation_output: Path | None, example_input: Any | None,
+    performance_hint: str, num_streams: int, inference_num_threads: int,
+    inference_precision: str,
 ) -> RuntimeBackendResult:
     _require_modules(modules=["openvino"], install_hint="python -m pip install openvino", backend_name=requested_backend)
     if int8_model_path is None:
@@ -678,7 +737,12 @@ def _configure_openvino_int8(
         raise RuntimeBackendUnavailable(
             f"Artifact is not verified low precision: FakeQuantize={fake_quantize_count}, i8/u8={low_precision_types}"
         )
-    compiled_model = core.compile_model(ov_model, openvino_device)
+    compiled_model = core.compile_model(ov_model, openvino_device, {
+        "PERFORMANCE_HINT": performance_hint,
+        "NUM_STREAMS": num_streams,
+        "INFERENCE_NUM_THREADS": inference_num_threads,
+        "INFERENCE_PRECISION_HINT": inference_precision,
+    })
     output_roles = _infer_openvino_detection_output_roles(compiled_model.outputs)
     sample = example_input.detach().cpu().float().numpy()
     result = compiled_model({compiled_model.inputs[0]: sample})
@@ -723,7 +787,23 @@ def _configure_openvino_int8(
         available_devices=available_devices, selected_device=openvino_device, openvino_model_path=xml_path,
         openvino_weights_path=bin_path, openvino_ir_reused=True, openvino_compress_to_fp16=False, precision="INT8",
         runtime_limitations=["NNCF-quantized OpenVINO IR executes on OpenVINO CPU; preprocessing, merging, NMS, and metrics remain FP32/Python."],
+        runtime_properties=_openvino_compiled_properties(compiled_model),
     )
+
+
+def _openvino_compiled_properties(compiled_model: Any) -> dict[str, Any]:
+    properties: dict[str, Any] = {}
+    for name in (
+        "EXECUTION_DEVICES", "PERFORMANCE_HINT", "INFERENCE_NUM_THREADS",
+        "NUM_STREAMS", "ENABLE_CPU_PINNING", "EXECUTION_MODE_HINT",
+        "INFERENCE_PRECISION_HINT",
+    ):
+        try:
+            value = compiled_model.get_property(name)
+            properties[name.lower()] = list(value) if name == "EXECUTION_DEVICES" else str(value)
+        except Exception as exc:
+            properties[name.lower()] = f"unavailable: {exc}"
+    return properties
 
 
 def _configure_tensorrt(

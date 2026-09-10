@@ -1,0 +1,178 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "num_images": 3,
+  "num_patches": 228,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 242.57264617399778,
+  "startup_time_s": 8.269888668015483,
+  "startup_stages_s": {
+    "dataset_loading": 0.0011773890000768006,
+    "dataset_box_conversion": 0.0008731990092201158,
+    "config_loading": 0.0007060299976728857,
+    "model_loading": 0.2595633009914309,
+    "runtime_validation_input": 0.10296222800388932,
+    "runtime_backend_setup": 2.735503135001636,
+    "warmup": 5.168841826001881,
+    "inference_setup": 0.00026156000967603177
+  },
+  "measured_inference_time_s": 233.39034751598956,
+  "evaluation_metrics_s": 0.03223613700538408,
+  "output_serialization_s": 0.0001331000094069168,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 0.7588827650179155,
+      "percent_of_measured_inference": 0.3251560199874695
+    },
+    "forward_pass": {
+      "total_s": 232.46452634116577,
+      "percent_of_measured_inference": 99.60331642474615
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.1395800309983315,
+      "percent_of_measured_inference": 0.05980540004499067
+    },
+    "model_device_setup": {
+      "total_s": 4.799978341907263e-06,
+      "percent_of_measured_inference": 2.056631044511563e-06
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.02013784198788926,
+      "percent_of_measured_inference": 0.008628395390906053
+    }
+  },
+  "per_image_s": [
+    71.75413139999728,
+    90.12246079799661,
+    71.51375531799567
+  ],
+  "patches_per_image": [
+    70,
+    88,
+    70
+  ],
+  "mean_per_image_s": 77.79678250532986,
+  "median_per_image_s": 71.75413139999728,
+  "mean_per_patch_s": 1.0236418750701297,
+  "median_per_patch_s": 1.024118872704507,
+  "runtime_backend": "onnxruntime_cpu",
+  "effective_runtime_backend": "onnxruntime_cpu",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": 18,
+  "onnx_model_path": "experiments/quantization/ptq_20260816T1815Z/baseline/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "openvino_device": null,
+  "export_path": "experiments/quantization/ptq_20260816T1815Z/baseline/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "export_reused": true,
+  "execution_providers": [
+    "CPUExecutionProvider"
+  ],
+  "validation_path": "experiments/final_cpu_4physicalcore_rerun_20260906/diagnostic/baseline_ort_fp32/rep1/runtime_onnx_validation.json",
+  "validation_status": "passed",
+  "onnx_export_method": "reused",
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [
+    "ONNX Runtime uses the exported torchvision FCOS inference graph on CPU. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "runtime_warnings": [],
+  "runtime_properties": {
+    "intra_op_num_threads": 4,
+    "inter_op_num_threads": 1,
+    "execution_mode": "ExecutionMode.ORT_SEQUENTIAL"
+  },
+  "model_name": "FCOS_18",
+  "pruned_model_path": null,
+  "pruned_model_loaded": false,
+  "model_artifact_load_method": null,
+  "model_artifact_source": null,
+  "det_thresh": 0.584,
+  "total_runtime_s": 242.57194029500533,
+  "pipeline_timing_enabled": true,
+  "warmup_iterations": 5,
+  "runtime_intra_op_threads": 4,
+  "runtime_inter_op_threads": 1,
+  "openvino_performance_hint": "LATENCY",
+  "openvino_num_streams": 1,
+  "openvino_inference_num_threads": 4,
+  "openvino_inference_precision": "f32",
+  "cpu_resources": {
+    "process_affinity_logical_cpus": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "logical_cpu_to_physical_core": {
+      "0": 0,
+      "2": 1,
+      "4": 2,
+      "6": 3
+    },
+    "effective_physical_core_ids": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "effective_physical_core_count": 4,
+    "thread_count_at_metadata_capture": 20,
+    "per_thread_allowed_cpu_lists": {
+      "7": "0,2,4,6",
+      "8": "0,2,4,6",
+      "9": "0,2,4,6",
+      "10": "0,2,4,6",
+      "11": "0,2,4,6",
+      "12": "0,2,4,6",
+      "13": "0,2,4,6",
+      "14": "0,2,4,6",
+      "15": "0,2,4,6",
+      "16": "0,2,4,6",
+      "17": "0,2,4,6",
+      "18": "0,2,4,6",
+      "19": "0,2,4,6",
+      "20": "0,2,4,6",
+      "21": "0,2,4,6",
+      "22": "0,2,4,6",
+      "23": "0,2,4,6",
+      "24": "0,2,4,6",
+      "25": "0,2,4,6",
+      "26": "0,2,4,6"
+    },
+    "unique_thread_allowed_cpu_lists": [
+      "0,2,4,6"
+    ],
+    "torch_num_threads": 4,
+    "torch_num_interop_threads": 1,
+    "thread_environment": {
+      "OMP_NUM_THREADS": "4",
+      "MKL_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "NUMEXPR_NUM_THREADS": "4",
+      "TORCH_NUM_THREADS": "4",
+      "TORCH_NUM_INTEROP_THREADS": "1"
+    }
+  }
+}

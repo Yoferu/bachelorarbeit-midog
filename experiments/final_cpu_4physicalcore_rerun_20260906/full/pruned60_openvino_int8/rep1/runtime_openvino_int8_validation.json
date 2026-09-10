@@ -1,0 +1,111 @@
+{
+  "available_devices": [
+    "CPU"
+  ],
+  "compiled_properties": {
+    "execution_devices": [
+      "CPU"
+    ],
+    "inference_num_threads": 4,
+    "num_streams": "1"
+  },
+  "element_type_counts": {
+    "<Type: 'char'>": 36,
+    "<Type: 'float32'>": 2121,
+    "<Type: 'int32_t'>": 110,
+    "<Type: 'int64_t'>": 698,
+    "<Type: 'int8_t'>": 39,
+    "<Type: 'uint64_t'>": 1
+  },
+  "fake_quantize_count": 202,
+  "int8_detection_count": 77,
+  "low_precision_output_count": 0,
+  "openvino_model_path": "/home/johan/bachelorarbeit-midog/experiments/quantization/openvino_ptq_20260819T0000Z/pruned_recovered/int8/FCOS_18_pruned60_recovered_int8.xml",
+  "openvino_version": "2026.1.0-21367-63e31528c62-releases/2026/1",
+  "openvino_weights_path": "/home/johan/bachelorarbeit-midog/experiments/quantization/openvino_ptq_20260819T0000Z/pruned_recovered/int8/FCOS_18_pruned60_recovered_int8.bin",
+  "operator_counts": {
+    "Add": 169,
+    "Broadcast": 10,
+    "Concat": 37,
+    "Constant": 1638,
+    "Convert": 67,
+    "Convolution": 83,
+    "Divide": 17,
+    "Equal": 6,
+    "FakeQuantize": 202,
+    "FloorMod": 5,
+    "Gather": 86,
+    "GatherND": 5,
+    "Greater": 5,
+    "If": 1,
+    "Interpolate": 4,
+    "Less": 10,
+    "LogicalAnd": 5,
+    "LogicalNot": 5,
+    "LogicalXor": 5,
+    "MVN": 40,
+    "MaxPool": 2,
+    "Maximum": 10,
+    "Minimum": 10,
+    "Multiply": 119,
+    "NonZero": 5,
+    "Parameter": 1,
+    "Range": 10,
+    "ReduceMin": 5,
+    "ReduceProd": 1,
+    "Relu": 62,
+    "Reshape": 150,
+    "Result": 3,
+    "Select": 5,
+    "ShapeOf": 25,
+    "Sigmoid": 10,
+    "Slice": 35,
+    "Sqrt": 5,
+    "Squeeze": 30,
+    "Subtract": 20,
+    "TopK": 5,
+    "Transpose": 10,
+    "Unsqueeze": 66,
+    "VariadicSplit": 6
+  },
+  "outputs": {
+    "boxes": {
+      "dtype": "float32",
+      "finite": true,
+      "maximum": 1007.9754028320312,
+      "minimum": 0.0,
+      "shape": [
+        77,
+        4
+      ]
+    },
+    "labels": {
+      "dtype": "int64",
+      "finite": true,
+      "maximum": 1.0,
+      "minimum": 1.0,
+      "shape": [
+        77
+      ]
+    },
+    "scores": {
+      "dtype": "float32",
+      "finite": true,
+      "maximum": 0.21824271976947784,
+      "minimum": 0.07483487576246262,
+      "shape": [
+        77
+      ]
+    }
+  },
+  "rt_info": {
+    "Runtime_version": "<OVAny class>",
+    "__weights_path": "<OVAny class>",
+    "conversion_parameters": "{'input_model': <OVAny class>, 'is_python_object': <OVAny class>}",
+    "nncf": "{'friendly_names_were_updated': <OVAny class>, 'quantization': {'advanced_parameters': <OVAny class>, 'fast_bias_correction': <OVAny class>, 'ignored_scope': <OVAny class>, 'model_type': <OVAny class>, 'preset': <OVAny class>, 'subset_size': <OVAny class>, 'target_device': <OVAny class>}, 'version': <OVAny class>}",
+    "version": "<OVAny class>"
+  },
+  "runtime_backend": "openvino_int8",
+  "selected_device": "CPU",
+  "status": "passed"
+}

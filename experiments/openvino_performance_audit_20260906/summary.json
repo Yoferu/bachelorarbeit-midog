@@ -1,0 +1,76 @@
+{
+  "root_cause": {
+    "primary": "historical taskset mask 0-3 exposed four SMT threads but only two physical cores",
+    "secondary": "OpenVINO FP32-storage IR defaulted to BF16 CPU execution and was labeled FP32",
+    "historical_compiled_inference_threads": 2,
+    "corrected_compiled_inference_threads": 4
+  },
+  "diagnostic_228_patches": {
+    "openvino_old_mask_bf16": {
+      "forward_s": [201.72193187104858],
+      "e2e_s": [215.31343231700157]
+    },
+    "openvino_corrected_bf16": {
+      "forward_s": [105.74311347205366, 105.41307310402772, 106.36476989501534],
+      "forward_median_s": 105.74311347205366,
+      "forward_mean_s": 105.84031882369891,
+      "forward_stdev_s": 0.48323737002159994,
+      "e2e_s": [114.50596958599635, 114.04106405600032, 115.16016990700155]
+    },
+    "onnxruntime_fp32": {
+      "forward_s": [100.21534880207764, 99.04165510000894, 99.89320783393487],
+      "forward_median_s": 99.89320783393487,
+      "forward_mean_s": 99.71673724534048,
+      "forward_stdev_s": 0.6064203394082944,
+      "e2e_s": [110.55685673499829, 107.80034950099798, 109.39637655999832]
+    },
+    "openvino_strict_fp32": {
+      "forward_s": [208.78932257302222, 210.23269219992653, 208.84837801705726],
+      "forward_median_s": 208.84837801705726,
+      "forward_mean_s": 209.290130930002,
+      "forward_stdev_s": 0.8168158893158546,
+      "e2e_s": [220.2992931560002, 221.83528623899474, 220.90133791699918]
+    }
+  },
+  "full_8500_patches": {
+    "historical_openvino_bf16": {
+      "forward_s": 7605.406250312074,
+      "e2e_s": 7675.307430016999,
+      "ms_per_patch": 894.7536765073028,
+      "status": "suspect"
+    },
+    "corrected_openvino_bf16": {
+      "forward_s": 3929.310522550186,
+      "e2e_s": 4009.628570654,
+      "ms_per_patch": 462.2718261823748,
+      "throughput_patches_s": 2.163229388774131,
+      "peak_rss_kib": 1907776,
+      "f1": 0.8231803797468353,
+      "precision": 0.8037852452684431,
+      "recall": 0.8435346574787188,
+      "ap": 0.886191725730896
+    },
+    "onnxruntime_fp32_historical": {
+      "forward_s": 3780.1057181580213,
+      "e2e_s": 3913.469515539,
+      "ms_per_patch": 444.71831978329664,
+      "f1": 0.8250497017892643,
+      "ap": 0.8859153985977173
+    },
+    "openvino_strict_fp32": {
+      "forward_s": 7785.237629323354,
+      "e2e_s": 7844.510829701998,
+      "ms_per_patch": 915.9103093321593,
+      "throughput_patches_s": 1.0918099619701356,
+      "peak_rss_kib": 2146692,
+      "model_size_bytes": 75009719,
+      "f1": 0.8250497017892643,
+      "precision": 0.8095981271946935,
+      "recall": 0.8411025537089579,
+      "ap": 0.8859154582023621,
+      "ort_forward_speedup_over_openvino": 2.059531130940742,
+      "ort_e2e_speedup_over_openvino": 2.004490468189327
+    }
+  },
+  "pytorch_full_status": "not present in repository; no full-result speedup calculated"
+}

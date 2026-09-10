@@ -1,5 +1,10 @@
 # Benchmarking
 
+The canonical scope definitions are in the top-level `README.md`. In particular,
+the final test is 111 images/8,500 patches; historical 105-image, quick 32-image,
+and smoke/device 3-image results are distinct workloads and must be visibly
+labelled when reported together.
+
 ## Smoke Test
 
 The smoke test checks that one model and the evaluation path run on a tiny fixed
@@ -89,6 +94,9 @@ weight compression. Set `OPENVINO_COMPRESS_TO_FP16=0` or pass
 `openvino.save_model(..., compress_to_fp16=False)` for accuracy validation.
 The FP32 IR filename includes `_fp32`, and runtime, validation, and timing
 metadata record `openvino_compress_to_fp16`.
+
+This export option must not be presented as an executed precision comparison.
+No completed FP16 benchmark is included in the final experimental results.
 
 OpenVINO generated artifacts are stored under:
 
@@ -199,10 +207,17 @@ experiments/eval_guide/exported_models/
 The directory is ignored except for its `.gitignore`, so generated model files
 are not committed.
 
-## Full Benchmark
+## Full Final Test Evaluation / Benchmark
 
-The full benchmark runs the complete official MIDOG++ xvalidation test split.
-Use this for final runtime and accuracy reporting.
+The full benchmark runs the current complete official MIDOG++ xvalidation test
+split: 111 images and 8,500 patches. Use this for final runtime and accuracy
+reporting. The older 105-image evaluations, 32-image quick subset, and 3-image
+smoke/device subset are not final-test results.
+
+Threshold-only metrics generated from saved predictions must be labelled
+**cached-prediction rescoring**. They are valid quality results at the new
+threshold, but are not additional inference executions and must not be assigned
+new forward or E2E timings.
 
 ```bash
 "$HOME/bachelorarbeit-midog/scripts/run_full_benchmark.sh"

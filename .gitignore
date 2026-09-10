@@ -19,6 +19,42 @@ experiments/quantization/
 experiments/combined_optimization/
 dist/
 
+# Preserve the compact, authoritative final-result summaries. Raw predictions,
+# checkpoints, ONNX/OpenVINO binaries, and the remaining experiment trees stay
+# ignored and are checksum-indexed in reports/final_results_provenance.md.
+!experiments/combined_optimization/
+experiments/combined_optimization/*
+!experiments/combined_optimization/final_quantization_comparison_20260819T0000Z/
+experiments/combined_optimization/final_quantization_comparison_20260819T0000Z/*
+!experiments/combined_optimization/final_quantization_comparison_20260819T0000Z/*.json
+!experiments/combined_optimization/final_quantization_comparison_20260819T0000Z/*.csv
+!experiments/combined_optimization/final_quantization_comparison_20260819T0000Z/*.md
+!experiments/combined_optimization/final_quantization_comparison_20260819T0000Z/commands.sh
+
+# Preserve the corrected PTQ scope/checkpoint README without exposing the large
+# quantization run tree.
+!experiments/quantization/
+experiments/quantization/*
+!experiments/quantization/ptq_20260816T1815Z/
+experiments/quantization/ptq_20260816T1815Z/*
+!experiments/quantization/ptq_20260816T1815Z/README.md
+
+# Preserve corrected Raspberry Pi 5 documentation while retaining legacy rpi4
+# artifact paths and continuing to ignore the large deployment bundles.
+!dist/
+dist/*
+!dist/rpi4_fcos_benchmark_bundle_report.md
+!dist/rpi4_fcos18_benchmark_bundle_report.md
+!dist/rpi4_fcos_benchmark_bundle_after_pi_tests/
+dist/rpi4_fcos_benchmark_bundle_after_pi_tests/*
+!dist/rpi4_fcos_benchmark_bundle_after_pi_tests/README_RPI4.md
+!dist/rpi4_fcos_benchmark_bundle/
+dist/rpi4_fcos_benchmark_bundle/*
+!dist/rpi4_fcos_benchmark_bundle/README_RPI4.md
+!dist/rpi4_fcos18_benchmark_bundle/
+dist/rpi4_fcos18_benchmark_bundle/*
+!dist/rpi4_fcos18_benchmark_bundle/README_RPI4.md
+
 
 # OS/editor noise
 .DS_Store

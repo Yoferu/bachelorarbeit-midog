@@ -1,0 +1,31 @@
+{
+  "date": "2026-09-06",
+  "platform": "Linux 5.15.167.4-microsoft-standard-WSL2 x86_64",
+  "cpu": "AMD Ryzen 9 9950X3D 16-Core Processor",
+  "logical_cpus": 32,
+  "physical_cores": 16,
+  "threads_per_core": 2,
+  "historical_affinity": "0-3",
+  "historical_affinity_physical_cores": [0, 1],
+  "corrected_affinity": "0,2,4,6",
+  "corrected_affinity_physical_cores": [0, 1, 2, 3],
+  "python": "3.12.3",
+  "pytorch": "2.11.0+cu130",
+  "onnxruntime": "1.26.0",
+  "openvino": "2026.1.0-21367-63e31528c62-releases/2026/1",
+  "device": "CPU",
+  "cpu_governor": "not exposed by WSL2 sysfs",
+  "background_load_at_audit_start": "no process with observable nonzero CPU usage",
+  "thread_environment_full_runs": {
+    "OMP_NUM_THREADS": "4",
+    "MKL_NUM_THREADS": "4",
+    "OPENBLAS_NUM_THREADS": "4",
+    "NUMEXPR_NUM_THREADS": "4",
+    "TORCH_NUM_THREADS": "4",
+    "TORCH_NUM_INTEROP_THREADS": "1"
+  },
+  "source_onnx_sha256": "bfb33fc437efcbd70127855177a5b864988eb37f3621096a2e928b7d8aa20a60",
+  "openvino_xml_sha256": "38f88baaa12a25049b7e54eec6d5355fa47fdbde63737af66696d8ba0709ad3b",
+  "openvino_bin_sha256": "2d358d08dbdadcad1454f6d5af869436d038c64bef24e6c0de94ab1255180181",
+  "checkpoint_sha256": "143dd591013f06d1277b36fdf94707ca83acd3f5c867a10a59f2bb2e1b1f1343"
+}

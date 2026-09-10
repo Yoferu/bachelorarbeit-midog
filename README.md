@@ -8,6 +8,36 @@ Large datasets and cloned upstream repositories are intentionally excluded from 
 - `repos/`
 - `.venv/`
 
+The authoritative index for thesis results, artifact hashes, and legacy naming is
+[`reports/final_results_provenance.md`](reports/final_results_provenance.md).
+
+## Canonical experiment terminology
+
+- **Smoke test:** tiny technical execution check, normally 3 images; never a
+  final accuracy or performance claim.
+- **Quick evaluation:** fixed 32-image subset used for iteration and regression
+  detection; non-final.
+- **Validation:** evaluation on a development split used for model/checkpoint
+  decisions, not the held-out final test.
+- **Calibration:** use of the separate 39-image calibration split to select an
+  operating threshold or quantization parameters.
+- **Threshold sweep:** evaluation of multiple confidence thresholds. A sweep on
+  the 32-image test subset is diagnostic and is not final calibration.
+- **Cached-prediction rescoring:** recomputation of threshold-dependent metrics
+  from saved predictions without executing the model again. It is not a new
+  inference run or performance benchmark and has no new forward/E2E runtime.
+- **Full final test evaluation:** model inference over the current held-out
+  111-image, 8,500-patch test workload. Unqualified “final test evaluation” means
+  this workload. Older 105-image runs are historical evaluations.
+- **Performance benchmark:** a timed execution under a recorded backend,
+  precision, workload, CPU, and thread configuration. Performance numbers are
+  comparable only within a matched configuration.
+
+The physical target used for device measurements was a **Raspberry Pi 5 with
+four Cortex-A76 CPU cores**. Paths and archives beginning with `rpi4_` are
+preserved legacy names; they do not identify the hardware that produced the
+measurements.
+
 ## Contents
 
 - `scripts/` - stable CLI entrypoints for preparing MIDOG++ subsets, benchmark runs, and result summaries.
@@ -86,10 +116,12 @@ CSV files under `experiments/eval_guide/results/`. The timed quick benchmark
 also writes `*_timing_median.csv`; use the median measured repeat as the primary
 runtime comparison value.
 
-### 3. Full Benchmark
+### 3. Full Final Test Evaluation / Benchmark
 
-The full benchmark remains the complete official MIDOG++ xvalidation test split
-evaluation and is the source for final runtime and accuracy reporting.
+The full benchmark is the current complete 111-image, 8,500-patch MIDOG++
+xvalidation test workload and is the source for final runtime and accuracy
+reporting. Historical 105-image evaluations are retained but are not this final
+workload.
 
 ```bash
 PROJECT="$HOME/bachelorarbeit-midog"
@@ -132,6 +164,9 @@ weight compression. For a controlled FP32 comparison, run with
 `openvino.save_model(..., compress_to_fp16=False)`, writes a distinct `_fp32`
 IR, and records `openvino_compress_to_fp16` in runtime, validation, and timing
 metadata.
+
+FP16 weight compression in an exported IR is not evidence of an FP16 benchmark.
+**No completed FP16 benchmark is included in the final experimental results.**
 
 OpenVINO can produce slightly different FCOS postprocessing/NMS results than
 PyTorch/ONNX Runtime because exported detection filtering is part of the model

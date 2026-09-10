@@ -1,0 +1,63 @@
+{
+  "comparisons": {
+    "boxes": {
+      "allclose": true,
+      "max_abs_diff": 0.0001220703125,
+      "onnx_dtype": "float32",
+      "onnx_shape": [
+        84,
+        4
+      ],
+      "pytorch_dtype": "float32",
+      "pytorch_shape": [
+        84,
+        4
+      ],
+      "shape_match": true
+    },
+    "labels": {
+      "allclose": true,
+      "max_abs_diff": 0.0,
+      "onnx_dtype": "int64",
+      "onnx_shape": [
+        84
+      ],
+      "pytorch_dtype": "int64",
+      "pytorch_shape": [
+        84
+      ],
+      "shape_match": true
+    },
+    "scores": {
+      "allclose": true,
+      "max_abs_diff": 6.407499313354492e-07,
+      "onnx_dtype": "float32",
+      "onnx_shape": [
+        84
+      ],
+      "pytorch_dtype": "float32",
+      "pytorch_shape": [
+        84
+      ],
+      "shape_match": true
+    }
+  },
+  "execution_providers": [
+    "CPUExecutionProvider"
+  ],
+  "export_reused": true,
+  "limitations": [
+    "ONNX Runtime uses the exported torchvision FCOS inference graph on CPU. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "onnx_export_method": "reused",
+  "onnx_model_path": "experiments/quantization/ptq_20260816T1815Z/pruned_recovered/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "onnx_opset": 18,
+  "output_roles": {
+    "boxes": 0,
+    "labels": 2,
+    "scores": 1
+  },
+  "runtime_backend": "onnxruntime_cpu",
+  "status": "passed",
+  "warnings": []
+}

@@ -1,0 +1,129 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "num_images": 3,
+  "num_patches": 228,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 114.50596958599635,
+  "startup_time_s": 5.782391871987784,
+  "startup_stages_s": {
+    "dataset_loading": 0.0011242079999647103,
+    "dataset_box_conversion": 0.0009901379962684587,
+    "config_loading": 0.0007207079979707487,
+    "model_loading": 0.3170338330019149,
+    "runtime_validation_input": 0.09332042899768567,
+    "runtime_backend_setup": 3.056478236998373,
+    "warmup": 2.3122887599965907,
+    "inference_setup": 0.000435558999015484
+  },
+  "measured_inference_time_s": 106.6051758649919,
+  "evaluation_metrics_s": 0.03438235399516998,
+  "output_serialization_s": 0.0001561600001878105,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 0.7497622569644591,
+      "percent_of_measured_inference": 0.7033075560177127
+    },
+    "forward_pass": {
+      "total_s": 105.74311347205366,
+      "percent_of_measured_inference": 99.19135033928373
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.08763182099937694,
+      "percent_of_measured_inference": 0.08220221981562752
+    },
+    "model_device_setup": {
+      "total_s": 5.720008630305529e-06,
+      "percent_of_measured_inference": 5.365601232673285e-06
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.02065336400846718,
+      "percent_of_measured_inference": 0.019373697234572586
+    }
+  },
+  "per_image_s": [
+    32.90235477799433,
+    41.13279186900036,
+    32.57002921799722
+  ],
+  "patches_per_image": [
+    70,
+    88,
+    70
+  ],
+  "mean_per_image_s": 35.53505862166397,
+  "median_per_image_s": 32.90235477799433,
+  "mean_per_patch_s": 0.467566560811368,
+  "median_per_patch_s": 0.4674180894204586,
+  "runtime_backend": "openvino_cpu",
+  "effective_runtime_backend": "openvino_cpu",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": 18,
+  "onnx_model_path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/smoke_fp32/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "openvino_device": "CPU",
+  "export_path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/smoke_fp32/export/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.xml",
+  "export_reused": true,
+  "execution_providers": null,
+  "validation_path": "experiments/openvino_performance_audit_20260906/diagnostic_corrected_openvino_rep1_runtime_openvino_validation.json",
+  "validation_status": "passed_with_warnings",
+  "onnx_export_method": "reused",
+  "openvino_version": "2026.1.0-21367-63e31528c62-releases/2026/1",
+  "available_devices": [
+    "CPU"
+  ],
+  "selected_device": "CPU",
+  "source_onnx_path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/smoke_fp32/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "source_onnx_reused": true,
+  "openvino_model_path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/smoke_fp32/export/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.xml",
+  "openvino_weights_path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/smoke_fp32/export/FCOS_18_patch1024_opset18_d5892925a8_openvino_fp32.bin",
+  "openvino_ir_reused": true,
+  "openvino_compress_to_fp16": false,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [
+    "OpenVINO CPU uses the ONNX export as an intermediate representation. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "runtime_warnings": [
+    "OpenVINO boxes is not numerically allclose to PyTorch on the validation patch (max_abs_diff=918.837646484375).",
+    "OpenVINO scores is not numerically allclose to PyTorch on the validation patch (max_abs_diff=0.002120763063430786)."
+  ],
+  "runtime_properties": {
+    "execution_devices": [
+      "CPU"
+    ],
+    "performance_hint": "LATENCY",
+    "inference_num_threads": "4",
+    "num_streams": "1",
+    "enable_cpu_pinning": "True",
+    "execution_mode_hint": "ExecutionMode.PERFORMANCE",
+    "inference_precision_hint": "<Type: 'bfloat16'>"
+  },
+  "model_name": "FCOS_18",
+  "pruned_model_path": null,
+  "pruned_model_loaded": false,
+  "model_artifact_load_method": null,
+  "model_artifact_source": null,
+  "det_thresh": 0.584,
+  "total_runtime_s": 114.5058296970019,
+  "pipeline_timing_enabled": true,
+  "warmup_iterations": 5,
+  "runtime_intra_op_threads": 0,
+  "runtime_inter_op_threads": 1,
+  "openvino_performance_hint": "LATENCY",
+  "openvino_num_streams": 1,
+  "openvino_inference_num_threads": 4
+}

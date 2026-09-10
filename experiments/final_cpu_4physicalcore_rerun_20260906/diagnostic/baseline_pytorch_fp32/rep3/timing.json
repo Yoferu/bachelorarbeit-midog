@@ -1,0 +1,144 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "num_images": 3,
+  "num_patches": 228,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 255.6814319640107,
+  "startup_time_s": 6.466025529996841,
+  "startup_stages_s": {
+    "dataset_loading": 0.0010815120040206239,
+    "dataset_box_conversion": 0.0010097519989358261,
+    "config_loading": 0.0007251619972521439,
+    "model_loading": 0.22487070299393963,
+    "runtime_validation_input": 0.08555624200380407,
+    "runtime_backend_setup": 4.99700108775869e-05,
+    "warmup": 6.152425767999375,
+    "inference_setup": 0.00030642098863609135
+  },
+  "measured_inference_time_s": 248.32756358401093,
+  "evaluation_metrics_s": 0.03267903800588101,
+  "output_serialization_s": 0.00016491100541315973,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 0.7200753140205052,
+      "percent_of_measured_inference": 0.28996995082944094
+    },
+    "forward_pass": {
+      "total_s": 247.49456270704104,
+      "percent_of_measured_inference": 99.66455561156904
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.08782159698603209,
+      "percent_of_measured_inference": 0.03536522314258579
+    },
+    "model_device_setup": {
+      "total_s": 0.003085367992753163,
+      "percent_of_measured_inference": 0.001242458931349907
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.01918848999775946,
+      "percent_of_measured_inference": 0.007727088254247645
+    }
+  },
+  "per_image_s": [
+    75.95558765900205,
+    96.00892816499982,
+    76.36304776000907
+  ],
+  "patches_per_image": [
+    70,
+    88,
+    70
+  ],
+  "mean_per_image_s": 82.77585452800365,
+  "median_per_image_s": 76.36304776000907,
+  "mean_per_patch_s": 1.0891559806316269,
+  "median_per_patch_s": 1.0909006822858438,
+  "runtime_backend": "pytorch_eager",
+  "effective_runtime_backend": "pytorch_eager",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": null,
+  "onnx_model_path": null,
+  "openvino_device": null,
+  "export_path": null,
+  "export_reused": null,
+  "execution_providers": null,
+  "validation_path": null,
+  "validation_status": null,
+  "onnx_export_method": null,
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [],
+  "runtime_warnings": [],
+  "runtime_properties": null,
+  "model_name": "FCOS_18",
+  "pruned_model_path": null,
+  "pruned_model_loaded": false,
+  "model_artifact_load_method": null,
+  "model_artifact_source": null,
+  "det_thresh": 0.584,
+  "total_runtime_s": 255.68115377301,
+  "pipeline_timing_enabled": true,
+  "warmup_iterations": 5,
+  "runtime_intra_op_threads": 0,
+  "runtime_inter_op_threads": 1,
+  "openvino_performance_hint": "LATENCY",
+  "openvino_num_streams": 1,
+  "openvino_inference_num_threads": 4,
+  "openvino_inference_precision": "f32",
+  "cpu_resources": {
+    "process_affinity_logical_cpus": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "logical_cpu_to_physical_core": {
+      "0": 0,
+      "2": 1,
+      "4": 2,
+      "6": 3
+    },
+    "effective_physical_core_ids": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "effective_physical_core_count": 4,
+    "torch_num_threads": 4,
+    "torch_num_interop_threads": 1,
+    "thread_environment": {
+      "OMP_NUM_THREADS": "4",
+      "MKL_NUM_THREADS": "4",
+      "OPENBLAS_NUM_THREADS": "4",
+      "NUMEXPR_NUM_THREADS": "4",
+      "TORCH_NUM_THREADS": "4",
+      "TORCH_NUM_INTEROP_THREADS": "1"
+    }
+  }
+}

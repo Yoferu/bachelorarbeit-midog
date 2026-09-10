@@ -1,0 +1,30 @@
+{
+  "status": "complete",
+  "phase_a_fixed_openvino": true,
+  "phase_b_threshold_calibration": true,
+  "phase_c_frozen_threshold_scoring": true,
+  "partial_results_reported_as_complete": false,
+  "validation": {
+    "calibration_test_overlap_count": 0,
+    "all_fixed_runs_images": [
+      111,
+      111,
+      111,
+      111,
+      111,
+      111,
+      111,
+      111
+    ],
+    "all_fixed_runs_patches": [
+      8500,
+      8500,
+      8500,
+      8500,
+      8500,
+      8500,
+      8500,
+      8500
+    ]
+  }
+}

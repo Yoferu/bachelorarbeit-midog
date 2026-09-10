@@ -1,0 +1,120 @@
+{
+  "run_name": "FCOS_18_eval",
+  "config_file": "experiments/eval_guide/configs/FCOS_18_eval.yaml",
+  "dataset_csv": "data/midogpp_guide_eval_xvalidation_3img.csv",
+  "num_images": 3,
+  "num_patches": 228,
+  "device": "cpu",
+  "batch_size": 1,
+  "num_workers": 0,
+  "overlap": 0.3,
+  "nms_thresh": 0.3,
+  "total_end_to_end_s": 109.39637655999832,
+  "startup_time_s": 4.882036196999252,
+  "startup_stages_s": {
+    "dataset_loading": 0.0010886500022024848,
+    "dataset_box_conversion": 0.0009817000027396716,
+    "config_loading": 0.0006918799990671687,
+    "model_loading": 0.41556316499918466,
+    "runtime_validation_input": 0.02272601299773669,
+    "runtime_backend_setup": 2.2000126429993543,
+    "warmup": 2.2406472069997108,
+    "inference_setup": 0.00032493899925611913
+  },
+  "measured_inference_time_s": 102.58394380701066,
+  "evaluation_metrics_s": 0.03275563799979864,
+  "output_serialization_s": 0.00017801899957703426,
+  "stages": {
+    "dataloader_wait_preprocessing": {
+      "total_s": 2.425987411988899,
+      "percent_of_measured_inference": 2.364880235597947
+    },
+    "forward_pass": {
+      "total_s": 99.89320783393487,
+      "percent_of_measured_inference": 97.37703984344975
+    },
+    "image_io_patch_extraction_setup": {
+      "total_s": 0.107864781995886,
+      "percent_of_measured_inference": 0.10514782137720313
+    },
+    "model_device_setup": {
+      "total_s": 6.640009814873338e-06,
+      "percent_of_measured_inference": 6.472757400870716e-06
+    },
+    "patch_merging_postprocessing_nms": {
+      "total_s": 0.14584358299907763,
+      "percent_of_measured_inference": 0.1421699903383034
+    }
+  },
+  "per_image_s": [
+    30.89807563800423,
+    40.35580841400224,
+    31.330059755004186
+  ],
+  "patches_per_image": [
+    70,
+    88,
+    70
+  ],
+  "mean_per_image_s": 34.19464793567022,
+  "median_per_image_s": 31.330059755004186,
+  "mean_per_patch_s": 0.44992957810092393,
+  "median_per_patch_s": 0.44757228221434553,
+  "runtime_backend": "onnxruntime_cpu",
+  "effective_runtime_backend": "onnxruntime_cpu",
+  "compile_backend": null,
+  "compile_mode": null,
+  "onnx_opset": 18,
+  "onnx_model_path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/smoke_fp32/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "openvino_device": null,
+  "export_path": "experiments/quantization/openvino_ptq_20260819T0000Z/baseline/smoke_fp32/export/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+  "export_reused": true,
+  "execution_providers": [
+    "CPUExecutionProvider"
+  ],
+  "validation_path": "experiments/openvino_performance_audit_20260906/diagnostic_controlled_ort_rep${rep}_runtime_onnx_validation.json",
+  "validation_status": "passed",
+  "onnx_export_method": "reused",
+  "openvino_version": null,
+  "available_devices": null,
+  "selected_device": null,
+  "source_onnx_path": null,
+  "source_onnx_reused": null,
+  "openvino_model_path": null,
+  "openvino_weights_path": null,
+  "openvino_ir_reused": null,
+  "openvino_compress_to_fp16": null,
+  "torch_version": null,
+  "cuda_available": null,
+  "cuda_device_name": null,
+  "tensorrt_version": null,
+  "onnx_path": null,
+  "tensorrt_engine_path": null,
+  "tensorrt_engine_reused": null,
+  "precision": null,
+  "engine_build_time_seconds": null,
+  "inference_latency_excludes_engine_build": null,
+  "runtime_limitations": [
+    "ONNX Runtime uses the exported torchvision FCOS inference graph on CPU. Preprocessing, patch extraction, patch merging, benchmark orchestration, and metric calculation remain in Python."
+  ],
+  "runtime_warnings": [],
+  "runtime_properties": {
+    "intra_op_num_threads": 0,
+    "inter_op_num_threads": 1,
+    "execution_mode": "ExecutionMode.ORT_SEQUENTIAL"
+  },
+  "model_name": "FCOS_18",
+  "pruned_model_path": null,
+  "pruned_model_loaded": false,
+  "model_artifact_load_method": null,
+  "model_artifact_source": null,
+  "det_thresh": 0.584,
+  "total_runtime_s": 109.39623166999809,
+  "pipeline_timing_enabled": true,
+  "warmup_iterations": 5,
+  "runtime_intra_op_threads": 0,
+  "runtime_inter_op_threads": 1,
+  "openvino_performance_hint": "LATENCY",
+  "openvino_num_streams": 1,
+  "openvino_inference_num_threads": 4
+}

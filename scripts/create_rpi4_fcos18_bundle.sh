@@ -441,14 +441,14 @@ print("verify_bundle.py: OK")
 '''
 (root / "verify_bundle.py").write_text(verify, encoding="utf-8")
 
-readme = """# Raspberry Pi 4 FCOS_18 Benchmark Bundle
+readme = """# Raspberry Pi 5 FCOS_18 Benchmark Bundle
 
 This bundle runs the existing MIDOG FCOS benchmark adapter with two CPU backends:
 
 1. PyTorch eager inference
 2. ONNX Runtime with `CPUExecutionProvider`
 
-Expected platform: Raspberry Pi 4 with a 64-bit Raspberry Pi OS or other 64-bit Debian-based ARM OS. Check the architecture first:
+Expected platform: Raspberry Pi 5 with a 64-bit Raspberry Pi OS or other 64-bit Debian-based ARM OS. Check the architecture first:
 
 ```bash
 uname -m
@@ -688,7 +688,7 @@ large_lines = "\n".join(
     for p, s in large
 ) or "- None"
 included_lines = "\n".join(f"- `{p.relative_to(root).as_posix()}` ({p.stat().st_size} bytes)" for p in files)
-report = f"""# Raspberry Pi 4 FCOS_18 Benchmark Bundle Report
+report = f"""# Raspberry Pi 5 FCOS_18 Benchmark Bundle Report
 
 ## Included Files
 
@@ -733,7 +733,7 @@ report = f"""# Raspberry Pi 4 FCOS_18 Benchmark Bundle Report
 
 ## Portability Problems
 
-- Full ARM64 wheel compatibility and thermal behavior must be validated on Raspberry Pi 4 hardware.
+- Full ARM64 wheel compatibility and thermal behavior must be validated on Raspberry Pi 5 hardware.
 - The existing guide inference module imports OpenSlide and OpenCV even for ROI TIFF input.
 
 ## Build And Verification Commands

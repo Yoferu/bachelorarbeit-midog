@@ -8,6 +8,13 @@ experiment directories.
 Run diagnostics with `bash experiments/final_cpu_4physicalcore_rerun_20260906/run_benchmarks.sh --diagnostic`.
 After validation, run the full matrix with the same script and `--full`.
 
-The matrix deliberately excludes Pruned60 OpenVINO FP32/BF16: those rows are not
-required to replace an existing final comparison. Corrected baseline OpenVINO
-strict-FP32 and BF16-execution results are reused from the OpenVINO audit.
+Pruned60 OpenVINO strict FP32 is run separately with
+`run_pruned60_openvino_strict_fp32.sh --diagnostic` or `--full`.
+Corrected baseline OpenVINO strict-FP32 and BF16-execution results are reused
+from the OpenVINO audit. See `final_report.md` for the combined comparison.
+
+Both launchers expect prepared artifacts at their declared paths. The main
+matrix skips completed rows; the strict-FP32 runner overwrites its output row.
+Use a fresh output root when repeating and inspect CPU topology before changing
+the host-specific affinity. Raw predictions/logs are local generated artifacts;
+compact timing, metric, and runtime records remain as provenance.

@@ -2,3 +2,5 @@ onnx
 onnxruntime
 onnxscript
 openvino
+
+nncf

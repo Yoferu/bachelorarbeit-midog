@@ -1,0 +1,56 @@
+experiment_name: fcos18_pruned60_supervised_clean_dense_lr3e-5_seed42_extend5
+output_dir: experiments/distillation/pruned60_clean_recovery/dense_checkpoint_lr_sweep/runs
+teacher: null
+student:
+  architecture: fcos18_depgraph_fpn_head_60pct
+  checkpoint: experiments/pruning/models/FCOS_18_depgraph_fpn_head_60pct.pt
+  freeze: false
+  pretrained_backbone: false
+  init_mode: structural_checkpoint
+  eval_config: experiments/eval_guide/configs/FCOS_18_eval.yaml
+  num_classes: 2
+  patch_size: 1024
+  det_thresh: 0.05
+  weights: null
+  returned_layers: [1, 2, 3, 4]
+  extra_blocks: false
+data:
+  train_csv: experiments/distillation/pruned60_clean_recovery/data/train_seed42.csv
+  val_csv: experiments/distillation/pruned60_clean_recovery/data/validation_seed42.csv
+  image_root: data/midogpp
+  dataset_type: midog_guide
+  box_format: cxcy
+  domain_col: tumortype
+  num_train_samples: 1024
+  num_val_samples: 128
+  fg_prob: 0.5
+  arb_prob: 0.25
+  guide_repo: repos/MIDOG_2025_Guide
+training:
+  epochs: 5
+  batch_size: 2
+  num_workers: 4
+  lr: 0.00003
+  weight_decay: 0.0001
+  seed: 42
+  device: cuda
+  max_batches_per_epoch: null
+  optimizer: AdamW
+  deterministic: true
+  gradient_clip_val: 1.0
+  gradient_accumulation_steps: 1
+distillation:
+  enabled: false
+  temperature: 2.0
+  lambda_supervised: 1.0
+  lambda_cls: 0.0
+  lambda_box: 0.0
+  lambda_centerness: 0.0
+  match_outputs: true
+  skip_mismatched_shapes: true
+logging:
+  save_every: 1
+  evaluate_every: 0
+  log_interval: 10
+  save_every_steps: 25
+  checkpoint_steps: [0, 25, 50, 75, 100, 125]

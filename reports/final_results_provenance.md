@@ -1,7 +1,13 @@
 # Final Results Provenance
 
-Authoritative thesis-results index, 2026-09-03. Numerical values remain unchanged
+Historical August-results index, 2026-09-03. Numerical values remain unchanged
 in the cited machine-readable artifacts.
+
+For corrected CPU timings and execution precision, use
+[`../experiments/final_cpu_4physicalcore_rerun_20260906/final_report.md`](../experiments/final_cpu_4physicalcore_rerun_20260906/final_report.md)
+and the September CPU/OpenVINO audits. The counts below describe the August
+comparison, not every later run. Generated files removed from tracking during submission cleanup
+are indexed in [`removed_artifacts.csv`](removed_artifacts.csv).
 
 ## Identity and counting rules
 

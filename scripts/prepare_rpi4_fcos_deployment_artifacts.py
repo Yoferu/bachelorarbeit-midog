@@ -252,6 +252,9 @@ def count_parameters_from_pruned(path: Path, guide_repo: Path) -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare FCOS_18/Pruned60 ONNX and INT8 deployment artifacts.")
+    parser.add_argument("--baseline-onnx", type=Path,
+                        default=REPO_ROOT / "experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+                        help="Existing baseline FP32 export; override when its generated filename differs.")
     parser.add_argument("--work-dir", type=Path, default=Path("dist/rpi4_fcos_artifacts"))
     parser.add_argument("--python", type=Path, default=Path(".venv/bin/python"))
     parser.add_argument("--guide-repo", type=Path, default=Path("repos/MIDOG_2025_Guide"))
@@ -263,6 +266,8 @@ def main() -> None:
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
+    if not args.baseline_onnx.is_file():
+        parser.error(f"Missing baseline ONNX export: {args.baseline_onnx}. Export with onnxruntime_cpu and pass --baseline-onnx.")
     work = args.work_dir
     paths = {
         "work": work,
@@ -283,7 +288,7 @@ def main() -> None:
     paths["results"].mkdir(parents=True, exist_ok=True)
 
     shutil.copy2(REPO_ROOT / "repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt", paths["checkpoint"])
-    shutil.copy2(REPO_ROOT / "experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx", paths["fcos18_fp32"])
+    shutil.copy2(args.baseline_onnx, paths["fcos18_fp32"])
     shutil.copy2(REPO_ROOT / "experiments/pruning/models/FCOS_18_depgraph_fpn_head_60pct.pt", paths["pruned_pt"])
     write_config(paths["fcos18_config"], model_name="FCOS_18", checkpoint=paths["checkpoint"])
     write_config(paths["pruned_config"], model_name="FCOS_18_pruned60", checkpoint=paths["checkpoint"])
@@ -312,7 +317,7 @@ def main() -> None:
     report = {
         "source_artifacts": {
             "fcos18_checkpoint": "repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt",
-            "fcos18_fp32_onnx": "experiments/eval_guide/exported_models/FCOS_18_patch1024_opset18_d5892925a8.onnx",
+            "fcos18_fp32_onnx": str(args.baseline_onnx),
             "pruned60": "experiments/pruning/models/FCOS_18_depgraph_fpn_head_60pct.pt",
         },
         "model_files": {

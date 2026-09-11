@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT="${PROJECT:-$HOME/bachelorarbeit-midog}"
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  echo "Usage: $0 [FCOS_18 FCOS_x50 FCOS_x101]"
+  echo "Environment: PROJECT, PYTHON, GUIDE_REPO, IMG_DIR, DEVICE, NUM_WORKERS,"
+  echo "RUNTIME_BACKEND, PRUNED_MODEL_PATH, PROFILE_PIPELINE; see docs/benchmarking.md."
+  exit 0
+fi
+
+PROJECT="${PROJECT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 EXP="${EXP:-$PROJECT/experiments/eval_guide}"
 GUIDE_REPO="${GUIDE_REPO:-$PROJECT/repos/MIDOG_2025_Guide}"
 PYTHON="${PYTHON:-$PROJECT/.venv/bin/python}"

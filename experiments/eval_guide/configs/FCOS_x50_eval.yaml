@@ -1,5 +1,5 @@
 backbone: resnext50_32x4d
-checkpoint: /home/johan/bachelorarbeit-midog/repos/FCOS_Inference_CLI/checkpoints/FCOS_x50.ckpt
+checkpoint: repos/FCOS_Inference_CLI/checkpoints/FCOS_x50.ckpt
 det_thresh: 0.548
 detector: FCOS
 extra_blocks: false

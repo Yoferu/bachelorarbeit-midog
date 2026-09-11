@@ -8,6 +8,13 @@ if [ ! -x "$PYTHON_BIN" ]; then
   PYTHON_BIN="${PYTHON:-python3}"
 fi
 
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  echo "Usage: $0 [--baseline-onnx PATH]"
+  echo "Build the six-variant Raspberry Pi 5 bundle (legacy rpi4 paths)."
+  echo "Other arguments are forwarded to prepare_rpi4_fcos_deployment_artifacts.py."
+  exit 0
+fi
+
 DIST_DIR="$REPO_ROOT/dist"
 BUNDLE_NAME="rpi4_fcos_benchmark_bundle"
 STAGING="$DIST_DIR/$BUNDLE_NAME"
@@ -17,7 +24,7 @@ ARTIFACT_DIR="$DIST_DIR/rpi4_fcos_artifacts"
 
 mkdir -p "$DIST_DIR"
 
-"$PYTHON_BIN" "$REPO_ROOT/scripts/prepare_rpi4_fcos_deployment_artifacts.py"
+"$PYTHON_BIN" "$REPO_ROOT/scripts/prepare_rpi4_fcos_deployment_artifacts.py" "$@"
 
 require_file() {
   local path="$1"

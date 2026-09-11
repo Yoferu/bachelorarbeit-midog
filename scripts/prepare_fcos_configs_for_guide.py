@@ -1,30 +1,35 @@
+"""Prepare guide evaluation configs for the local FCOS checkpoint directory."""
+import argparse
 from pathlib import Path
+
 import yaml
 
-project = Path.home() / "bachelorarbeit-midog"
-fcos_repo = project / "repos" / "FCOS_Inference_CLI"
-out_dir = project / "experiments" / "eval_guide" / "configs"
-out_dir.mkdir(parents=True, exist_ok=True)
 
-models = ["FCOS_18", "FCOS_x50", "FCOS_x101"]
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--project', type=Path, default=Path(__file__).resolve().parents[1])
+    args = parser.parse_args()
+    project = args.project.resolve()
+    fcos_repo = project / 'repos' / 'FCOS_Inference_CLI'
+    out_dir = project / 'experiments' / 'eval_guide' / 'configs'
+    prepared = []
+    for model in ('FCOS_18', 'FCOS_x50', 'FCOS_x101'):
+        source = fcos_repo / 'configs' / f'{model}.yaml'
+        if not source.is_file():
+            parser.error(f'Missing upstream configuration: {source}')
+        cfg = yaml.safe_load(source.read_text())
+        checkpoint = (fcos_repo / cfg['checkpoint']).resolve()
+        if not checkpoint.is_file():
+            parser.error(f'Missing pretrained checkpoint: {checkpoint}')
+        cfg['checkpoint'] = str(checkpoint)
+        cfg.setdefault('means', None)
+        cfg.setdefault('stds', None)
+        prepared.append((out_dir / f'{model}_eval.yaml', cfg))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for destination, cfg in prepared:
+        destination.write_text(yaml.safe_dump(cfg, sort_keys=False))
+        print(f'Wrote {destination}')
 
-for model in models:
-    src = fcos_repo / "configs" / f"{model}.yaml"
-    if not src.exists():
-        raise FileNotFoundError(src)
 
-    with src.open("r") as f:
-        cfg = yaml.safe_load(f)
-
-    ckpt = fcos_repo / cfg["checkpoint"]
-    cfg["checkpoint"] = str(ckpt.resolve())
-
-    cfg.setdefault("means", None)
-    cfg.setdefault("stds", None)
-
-    dst = out_dir / f"{model}_eval.yaml"
-    with dst.open("w") as f:
-        yaml.safe_dump(cfg, f, sort_keys=False)
-
-    print(f"Wrote {dst}")
-    print(f"  checkpoint: {cfg['checkpoint']}")
+if __name__ == '__main__':
+    main()

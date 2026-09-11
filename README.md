@@ -1,204 +1,137 @@
-# MIDOG Evaluation Artifacts
+# MIDOG FCOS thesis experiments
 
-This repository contains the local scripts, configuration files, logs, and JSON/CSV evaluation outputs used for MIDOG-related FCOS experiments.
+Code and configurations accompanying the bachelor thesis on efficient FCOS mitosis
+detection on CPUs and Raspberry Pi 5. Experiments cover baseline evaluation,
+structured pruning, supervised recovery, knowledge distillation, and FP32/INT8
+inference with PyTorch, ONNX Runtime, and OpenVINO.
 
-Large datasets and cloned upstream repositories are intentionally excluded from version control:
+Start with the [experiment map and commands](docs/experiments.md).
+The [result provenance index](reports/final_results_provenance.md) identifies
+historical artifacts; the [corrected CPU report](experiments/final_cpu_4physicalcore_rerun_20260906/final_report.md)
+supersedes the August CPU timings. The thesis manuscript is not included, so the
+experiment map follows the repository's audited experiment inventory.
 
-- `data/`
-- `repos/`
-- `.venv/`
+## Setup
 
-The authoritative index for thesis results, artifact hashes, and legacy naming is
-[`reports/final_results_provenance.md`](reports/final_results_provenance.md).
-
-## Canonical experiment terminology
-
-- **Smoke test:** tiny technical execution check, normally 3 images; never a
-  final accuracy or performance claim.
-- **Quick evaluation:** fixed 32-image subset used for iteration and regression
-  detection; non-final.
-- **Validation:** evaluation on a development split used for model/checkpoint
-  decisions, not the held-out final test.
-- **Calibration:** use of the separate 39-image calibration split to select an
-  operating threshold or quantization parameters.
-- **Threshold sweep:** evaluation of multiple confidence thresholds. A sweep on
-  the 32-image test subset is diagnostic and is not final calibration.
-- **Cached-prediction rescoring:** recomputation of threshold-dependent metrics
-  from saved predictions without executing the model again. It is not a new
-  inference run or performance benchmark and has no new forward/E2E runtime.
-- **Full final test evaluation:** model inference over the current held-out
-  111-image, 8,500-patch test workload. Unqualified “final test evaluation” means
-  this workload. Older 105-image runs are historical evaluations.
-- **Performance benchmark:** a timed execution under a recorded backend,
-  precision, workload, CPU, and thread configuration. Performance numbers are
-  comparable only within a matched configuration.
-
-The physical target used for device measurements was a **Raspberry Pi 5 with
-four Cortex-A76 CPU cores**. Paths and archives beginning with `rpi4_` are
-preserved legacy names; they do not identify the hardware that produced the
-measurements.
-
-## Contents
-
-- `scripts/` - stable CLI entrypoints for preparing MIDOG++ subsets, benchmark runs, and result summaries.
-- `src/benchmark/` - tracked benchmark adapter and timing helpers. This is the project-owned boundary to the gitignored MIDOG guide clone.
-- `src/pruning/` - tracked pruning utilities for project-owned structured pruning experiments.
-- `logs/` - local FCOS inference logs.
-- `results/raw_predictions/` - JSON detection outputs for the evaluated FCOS variants.
-- `experiments/eval_guide/` - evaluation configs, logs, and summarized metrics.
-
-## Python Dependencies
-
-The scripts use Python 3 and the packages listed in `requirements.txt`.
-Optional deployment runtime dependencies are recorded separately:
+Run commands from the repository root on Linux. Python 3.12.3 is installed in the
+audited development environment. Create `.venv` and install a matching PyTorch /
+torchvision pair for your CPU or CUDA environment, the upstream requirements,
+and this project's additional requirements:
 
 ```bash
+mkdir -p repos
+git clone https://github.com/DeepMicroscopy/MIDOG_2025_Guide.git repos/MIDOG_2025_Guide
+git -C repos/MIDOG_2025_Guide checkout 28ca3b940f0d04a87b4e517396d38c537291b19f
+git clone https://github.com/jonas-amme/FCOS_Inference_CLI.git repos/FCOS_Inference_CLI
+git -C repos/FCOS_Inference_CLI checkout ad28c685680cf922566ef929a47b9293401c872d
+git clone https://github.com/DeepMicroscopy/MIDOGpp.git repos/MIDOGpp
+git -C repos/MIDOGpp checkout c8f4a18d261e5c9d09c04b0925d40cd7935de618
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r repos/MIDOG_2025_Guide/requirements.txt
+python -m pip install -r repos/FCOS_Inference_CLI/requirements.txt
+python -m pip install -r requirements.txt
+# Optional: ONNX Runtime, OpenVINO and NNCF quantization
 python -m pip install -r requirements-runtime.txt
 ```
 
-## Benchmark Levels
+The guide supplies model factories, patch inference, and evaluation utilities;
+FCOS_Inference_CLI supplies model configurations and externally obtained
+checkpoints; MIDOGpp supplies annotations and the official split. The locally
+present MIDOG25 reference/evaluation Docker repositories are not required by
+these entry points. These revisions describe the inspected clones, not a verified
+lock of every historical run. The adapter imports guide utilities, not its locally
+modified `evaluate.py`.
 
-### 1. Smoke Test
+OpenSlide requires a system library as well as `openslide_python` (on Debian/Ubuntu,
+`libopenslide0`). Benchmarks also use Bash, `taskset`, and `/usr/bin/time`.
+Package requirements are not fully pinned; consult recorded runtime metadata
+before comparing results from a new environment.
 
-The smoke test is a very small technical check that the MIDOG guide evaluation
-command and model can run. It is not a performance or accuracy claim.
+## Data and pretrained models
 
-```bash
-PROJECT="$HOME/bachelorarbeit-midog"
-"$PROJECT/scripts/run_smoke_test.sh"
-```
-
-### 2. Quick Benchmark
-
-The quick benchmark is a fixed 32-image subset of the official MIDOG++
-xvalidation test split. It is intended for fast optimization iteration and
-regression detection, not for final accuracy claims. The subset is generated
-once and reused; benchmark runs do not resample it.
-
-Create or regenerate the fixed quick subset:
+Obtain the MIDOG++ TIFF images under the dataset's access terms, and place them in
+`data/midogpp/` with their original filenames. Use the annotation JSON and split
+from the checked-out MIDOGpp repository:
 
 ```bash
-PROJECT="$HOME/bachelorarbeit-midog"
-
-"$PROJECT/.venv/bin/python" "$PROJECT/scripts/create_quick_benchmark_subset.py" \
-  --input_csv "$PROJECT/data/midogpp_guide_eval_xvalidation.csv" \
-  --output_csv "$PROJECT/data/midogpp_guide_eval_xvalidation_quick.csv" \
-  --n 32 \
-  --seed 42 \
-  --split test \
-  --stratify_auto
+python scripts/create_guide_eval_csv_from_midogpp_split.py \
+  --midog-json repos/MIDOGpp/databases/MIDOG++.json \
+  --xvalidation repos/MIDOGpp/datasets_xvalidation.csv \
+  --out data/midogpp_guide_eval_xvalidation.csv --bbox-format xyxy
+python scripts/create_quick_benchmark_subset.py \
+  --input_csv data/midogpp_guide_eval_xvalidation.csv \
+  --output_csv data/midogpp_guide_eval_xvalidation_quick.csv \
+  --n 32 --seed 42 --split test --stratify_auto
+python scripts/create_pruned60_clean_recovery_splits.py --seed 42
 ```
 
-Run the quick benchmark with one warmup run and three measured repeats:
+The bbox interpretation must match the annotations; do not change it to `xywh`
+without checking the source format. The final workload is 111 test images / 8,500
+patches. Clean recovery uses 314 train, 39 validation (`val`), and 39 calibration
+images. Check generated split counts and the overlap manifest before training.
+
+Obtain `FCOS_18.ckpt`, `FCOS_x50.ckpt`, and `FCOS_x101.ckpt` using the upstream
+FCOS repository's model instructions and place them in
+`repos/FCOS_Inference_CLI/checkpoints/`. They are not distributed here. FCOS_x101
+is also the distillation teacher. Backbone initialization can require torchvision
+weights. Then configure local checkpoint paths:
 
 ```bash
-PROJECT="$HOME/bachelorarbeit-midog"
-"$PROJECT/scripts/run_quick_benchmark.sh" FCOS_18
+python scripts/prepare_fcos_configs_for_guide.py
 ```
 
-Run the quick benchmark with optional pipeline-stage timing:
+This writes absolute checkpoint paths for your checkout into the evaluation YAML
+files; review those local changes before committing. Training and pruning configs
+use paths relative to the repository root. Benchmark wrappers accept `PROJECT`,
+`PYTHON`, `GUIDE_REPO`, and `IMG_DIR` overrides.
+
+## Running experiments
 
 ```bash
-PROJECT="$HOME/bachelorarbeit-midog"
-PROFILE_PIPELINE=1 "$PROJECT/scripts/run_quick_benchmark.sh" FCOS_18
+PROFILE_PIPELINE=1 bash scripts/run_quick_benchmark.sh FCOS_18
+bash scripts/run_full_benchmark.sh FCOS_18
+python scripts/create_depgraph_structural_pruned_model.py \
+  --config experiments/pruning/configs/fcos18_depgraph_fpn_head_60pct.yaml \
+  --output experiments/pruning/models/FCOS_18_depgraph_fpn_head_60pct.pt
 ```
 
-For all three FCOS variants, omit the model argument:
+See [experiments](docs/experiments.md) for recovery, distillation, quantization,
+calibration, and Raspberry Pi commands; [benchmarking](docs/benchmarking.md) for
+thread/precision controls; and [pruning](docs/pruning.md) for model identity.
+Smoke and quick runs are diagnostics, not substitutes for full test evaluation.
 
-```bash
-PROJECT="$HOME/bachelorarbeit-midog"
-"$PROJECT/scripts/run_quick_benchmark.sh"
-```
+## Layout and generated artifacts
 
-Quick benchmark logs are written to `experiments/eval_guide/logs/` with
-`quick` in the filename. Timing summaries, when enabled, are written as JSON and
-CSV files under `experiments/eval_guide/results/`. The timed quick benchmark
-also writes `*_timing_median.csv`; use the median measured repeat as the primary
-runtime comparison value.
+- `scripts/`, `src/`: command-line entry points and shared implementation.
+- `experiments/*/configs/`: experiment inputs; dated experiment directories also
+  retain launchers and compact historical summaries.
+- `docs/`: reproduction instructions; `reports/`: audits and provenance.
+- `tests/`: regression checks (`python -m pytest -q`).
+- `data/`, `repos/`, `.venv/`, `dist/`: local data, dependencies, environment, and
+  generated deployment bundles, with a few tracked bundle documentation files.
 
-### 3. Full Final Test Evaluation / Benchmark
+Checkpoints, exports, cached predictions, logs, datasets, and raw run directories
+remain ignored. Existing compact metrics and summaries are retained without
+altering numbers. [Artifact-removal manifest](reports/removed_artifacts.csv)
+records 455 binaries/predictions/logs removed from tracking during submission
+cleanup. Their local copies are intact and excluded by `.gitignore`. Removing tracked files does not remove them from Git
+history. Do not force-add result trees. Regenerate artifacts with the documented
+entry points or obtain the exact hash-matched historical artifacts separately.
 
-The full benchmark is the current complete 111-image, 8,500-patch MIDOG++
-xvalidation test workload and is the source for final runtime and accuracy
-reporting. Historical 105-image evaluations are retained but are not this final
-workload.
+## Reproducibility limits and submission
 
-```bash
-PROJECT="$HOME/bachelorarbeit-midog"
-"$PROJECT/scripts/run_full_benchmark.sh"
-```
+The legacy key `pruned_recovered` in August results identifies a recovery-selected
+**step-0 Pruned60**, not successful recovery. Later launchers name a frozen-recovery
+selected checkpoint; establish its hash/selection record before equating models.
+CPU IDs `0-3` did not mean four physical cores on the development host; corrected
+runs use `0,2,4,6`. OpenVINO FP32 storage does not establish FP32 execution.
+The Pi measurements used a **Raspberry Pi 5**, three images, and 228 patches;
+`rpi4` filenames are preserved compatibility identifiers.
 
-### Optional Timing Fields
-
-Pipeline timing is disabled by default. Passing `PROFILE_PIPELINE=1` to the
-benchmark scripts enables coarse `time.perf_counter()` timing through the
-tracked adapter in `src/benchmark/midog_guide_adapter.py`. The guide clone under
-`repos/` is treated as a read-only dependency; benchmark functionality does not
-depend on uncommitted changes inside that clone.
-
-## Runtime and Deployment Optimization
-
-`pytorch_eager` is the default baseline. `pytorch_compile` is the first low-risk
-optimization path and can be enabled without changing benchmark commands:
-
-```bash
-RUNTIME_BACKEND=pytorch_compile PROFILE_PIPELINE=1 \
-  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
-```
-
-`onnxruntime_cpu` exports the torchvision FCOS inference graph to ONNX and runs
-patch inference with ONNX Runtime `CPUExecutionProvider`. Generated `.onnx`
-files are written to `experiments/eval_guide/exported_models/`, which is ignored
-by git. The exporter first tries the modern dynamo path and falls back to the
-legacy ONNX exporter when torchvision FCOS postprocessing/NMS blocks dynamo.
-Patch extraction, Python postprocessing/merging around patches, and metrics stay
-in the tracked adapter/evaluator flow.
-
-`openvino_cpu` uses the validated ONNX export as an intermediate format, converts
-it to OpenVINO IR, and runs patch inference on the OpenVINO CPU plugin. Generated
-`.xml` and `.bin` files are written next to the ONNX files under
-`experiments/eval_guide/exported_models/` and are not committed.
-The default OpenVINO IR keeps `openvino.save_model` defaults, including FP16
-weight compression. For a controlled FP32 comparison, run with
-`OPENVINO_COMPRESS_TO_FP16=0`; this calls
-`openvino.save_model(..., compress_to_fp16=False)`, writes a distinct `_fp32`
-IR, and records `openvino_compress_to_fp16` in runtime, validation, and timing
-metadata.
-
-FP16 weight compression in an exported IR is not evidence of an FP16 benchmark.
-**No completed FP16 benchmark is included in the final experimental results.**
-
-OpenVINO can produce slightly different FCOS postprocessing/NMS results than
-PyTorch/ONNX Runtime because exported detection filtering is part of the model
-graph. The adapter records this as validation metadata and warnings; final
-runtime and accuracy comparisons should include all four backends on the same
-Full Benchmark before making claims.
-
-TorchScript is not prioritized for new deployment work because recent PyTorch
-versions favor `torch.export`/`torch.compile` flows.
-
-Example deployment-target commands:
-
-```bash
-RUNTIME_BACKEND=onnxruntime_cpu PROFILE_PIPELINE=1 \
-  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
-
-RUNTIME_BACKEND=openvino_cpu PROFILE_PIPELINE=1 \
-  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
-
-OPENVINO_COMPRESS_TO_FP16=0 RUNTIME_BACKEND=openvino_cpu PROFILE_PIPELINE=1 \
-  "$HOME/bachelorarbeit-midog/scripts/run_quick_benchmark.sh" FCOS_18
-```
-
-## Structured Pruning
-
-The first pruning milestone is a conservative `FCOS_18` 10% masked structured
-channel-L2 baseline on internal detection-head convolutions. It produces a
-loadable PyTorch artifact and metadata under `experiments/pruning/models/`.
-Because this baseline zeros channels without physically removing them, it is
-mainly for feasibility and accuracy validation; large CPU speedups require a
-future dependency-aware physical pruning pass.
-
-See `docs/pruning.md` for inspection, artifact creation, smoke test, and quick
-benchmark commands. Use `PRUNED_MODEL_PATH=...` to evaluate the pruned artifact
-without changing baseline configs or weights.
+Training was not stable for every learning rate/seed. Exact historical package
+resolution, checkpoints, hardware conditions, and all raw outputs are not
+reconstructed by a fresh checkout. The [submission audit](reports/submission_cleanup.md)
+records remaining checks. After review and validation, tag the exact submitted
+commit `thesis-v1.0` and cite that tag/commit in the appendix. No release or tag is
+created by this cleanup.

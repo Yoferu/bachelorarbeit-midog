@@ -1,5 +1,5 @@
 backbone: resnet18
-checkpoint: /home/johan/bachelorarbeit-midog/repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt
+checkpoint: repos/FCOS_Inference_CLI/checkpoints/FCOS_18.ckpt
 det_thresh: 0.584
 detector: FCOS
 extra_blocks: false
